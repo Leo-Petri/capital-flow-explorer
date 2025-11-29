@@ -2,10 +2,17 @@ import { useState, useEffect, useMemo } from 'react';
 import { ControlsPanel } from '@/components/ControlsPanel';
 import { EntropyRiver } from '@/components/EntropyRiver';
 import { InspectorPanel } from '@/components/InspectorPanel';
-import { ASSETS, ASSET_KPI_DATA, MONTHLY_DATES, SIGNALS, FED_RATES, KpiId, EntropyBandId, Asset, Signal } from '@/data/mockData';
+import { loadClientData, SIGNALS, FED_RATES, KpiId, EntropyBandId, Asset, Signal } from '@/data/mockData';
 import { aggregateByEntropyBand } from '@/lib/aggregation';
 
 const Index = () => {
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [portfolioData, setPortfolioData] = useState<{
+    MONTHLY_DATES: string[];
+    ASSETS: Asset[];
+    ASSET_KPI_DATA: any[];
+  } | null>(null);
+  
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [filterMode, setFilterMode] = useState<'all' | 'liquid' | 'illiquid'>('all');
@@ -16,6 +23,26 @@ const Index = () => {
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
 
+  // Load client data on mount
+  useEffect(() => {
+    loadClientData().then(data => {
+      setPortfolioData(data);
+      setDataLoaded(true);
+    });
+  }, []);
+
+  if (!dataLoaded || !portfolioData) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
+          <p className="text-lg text-muted-foreground">Loading portfolio data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { MONTHLY_DATES, ASSETS, ASSET_KPI_DATA } = portfolioData;
   const currentDate = MONTHLY_DATES[currentDateIndex];
 
   // Filter assets based on mode
