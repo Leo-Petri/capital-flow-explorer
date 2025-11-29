@@ -47,6 +47,18 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        entropy: {
+          cold: "hsl(var(--entropy-cold))",
+          mild: "hsl(var(--entropy-mild))",
+          warm: "hsl(var(--entropy-warm))",
+          hot: "hsl(var(--entropy-hot))",
+          "very-hot": "hsl(var(--entropy-very-hot))",
+        },
+        chart: {
+          background: "hsl(var(--chart-background))",
+          grid: "hsl(var(--chart-grid))",
+          text: "hsl(var(--chart-text))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -57,6 +69,10 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      fontFamily: {
+        sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'monospace'],
       },
       borderRadius: {
         lg: "var(--radius)",
