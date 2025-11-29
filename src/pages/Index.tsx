@@ -93,8 +93,10 @@ const Index = () => {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
-          <p className="text-lg text-muted-foreground">Loading portfolio data...</p>
+          <div className="mb-4 h-16 w-16 animate-spin rounded-full border-4 border-primary/30 border-t-primary mx-auto" 
+               style={{ filter: 'drop-shadow(0 0 8px rgba(77, 163, 247, 0.4))' }} />
+          <p className="text-lg text-foreground font-semibold">Loading portfolio data...</p>
+          <p className="text-sm text-muted-foreground mt-1">Preparing your entropy visualization</p>
         </div>
       </div>
     );
@@ -120,49 +122,60 @@ const Index = () => {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
-      <ControlsPanel
-        currentDateIndex={currentDateIndex}
-        maxDateIndex={MONTHLY_DATES.length - 1}
-        currentDate={currentDate}
-        isPlaying={isPlaying}
-        onDateIndexChange={setCurrentDateIndex}
-        onPlayPause={() => setIsPlaying(!isPlaying)}
-        filterMode={filterMode}
-        onFilterModeChange={setFilterMode}
-        entropyThreshold={entropyThreshold}
-        onEntropyThresholdChange={setEntropyThreshold}
-        selectedKpi={selectedKpi}
-        onKpiChange={setSelectedKpi}
-        showFedRate={showFedRate}
-        onShowFedRateChange={setShowFedRate}
-      />
+    <div className="min-h-screen w-full bg-background p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr_380px] gap-6 h-[calc(100vh-3rem)]">
+        {/* Left Panel - Controls */}
+        <div className="bg-card rounded-lg shadow-qplix border border-border p-6 overflow-auto">
+          <ControlsPanel
+            currentDateIndex={currentDateIndex}
+            maxDateIndex={MONTHLY_DATES.length - 1}
+            currentDate={currentDate}
+            isPlaying={isPlaying}
+            onDateIndexChange={setCurrentDateIndex}
+            onPlayPause={() => setIsPlaying(!isPlaying)}
+            filterMode={filterMode}
+            onFilterModeChange={setFilterMode}
+            entropyThreshold={entropyThreshold}
+            onEntropyThresholdChange={setEntropyThreshold}
+            selectedKpi={selectedKpi}
+            onKpiChange={setSelectedKpi}
+            showFedRate={showFedRate}
+            onShowFedRateChange={setShowFedRate}
+          />
+        </div>
 
-      <EntropyRiver
-        data={stackedData}
-        currentDateIndex={currentDateIndex}
-        onBandClick={handleBandClick}
-        selectedBand={selectedBand}
-        signals={SIGNALS}
-        onSignalClick={handleSignalClick}
-        selectedSignal={selectedSignal?.id || null}
-        showFedRate={showFedRate}
-        fedRates={FED_RATES}
-        entropyThreshold={entropyThreshold}
-      />
+        {/* Center Panel - Chart */}
+        <div className="bg-card rounded-lg shadow-qplix border border-border overflow-hidden">
+          <EntropyRiver
+            data={stackedData}
+            currentDateIndex={currentDateIndex}
+            onBandClick={handleBandClick}
+            selectedBand={selectedBand}
+            signals={SIGNALS}
+            onSignalClick={handleSignalClick}
+            selectedSignal={selectedSignal?.id || null}
+            showFedRate={showFedRate}
+            fedRates={FED_RATES}
+            entropyThreshold={entropyThreshold}
+          />
+        </div>
 
-      <InspectorPanel
-        selectedBand={selectedBand}
-        selectedAsset={selectedAsset}
-        selectedSignal={selectedSignal}
-        assets={filteredAssets}
-        currentDate={currentDate}
-        selectedKpi={selectedKpi}
-        onSelectAsset={setSelectedAsset}
-        onClose={handleInspectorClose}
-        monthlyDates={MONTHLY_DATES}
-        assetKpiData={ASSET_KPI_DATA}
-      />
+        {/* Right Panel - Inspector */}
+        <div className="bg-card rounded-lg shadow-qplix border border-border overflow-auto">
+          <InspectorPanel
+            selectedBand={selectedBand}
+            selectedAsset={selectedAsset}
+            selectedSignal={selectedSignal}
+            assets={filteredAssets}
+            currentDate={currentDate}
+            selectedKpi={selectedKpi}
+            onSelectAsset={setSelectedAsset}
+            onClose={handleInspectorClose}
+            monthlyDates={MONTHLY_DATES}
+            assetKpiData={ASSET_KPI_DATA}
+          />
+        </div>
+      </div>
     </div>
   );
 };

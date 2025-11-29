@@ -41,7 +41,7 @@ export function InspectorPanel({
 }: InspectorPanelProps) {
   if (!selectedBand && !selectedAsset && !selectedSignal) {
     return (
-      <div className="w-96 bg-card border-l border-border p-6">
+      <div className="p-6">
         <div className="text-center text-muted-foreground space-y-2">
           <p className="text-sm">Click on an entropy band, asset, or signal to inspect details.</p>
         </div>
@@ -52,40 +52,40 @@ export function InspectorPanel({
   // Signal Inspector
   if (selectedSignal) {
     return (
-      <div className="w-96 bg-card border-l border-border p-6 space-y-4 overflow-y-auto">
+      <div className="p-6 space-y-6">
         <div className="flex items-start justify-between">
           <div>
-            <Badge variant="outline" className="mb-2">
-              {selectedSignal.type.toUpperCase()}
+            <Badge variant="outline" className="mb-2 uppercase tracking-wider">
+              {selectedSignal.type}
             </Badge>
             <h2 className="text-xl font-bold text-foreground">{selectedSignal.title}</h2>
-            <p className="text-sm text-muted-foreground font-mono">{selectedSignal.date}</p>
+            <p className="text-sm text-muted-foreground font-mono mt-1">{selectedSignal.date}</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} className="hover:bg-button-hover">
             <X className="h-4 w-4" />
           </Button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-semibold mb-2">Importance</h3>
+            <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider text-muted-foreground">Importance</h3>
             <Badge variant={
               selectedSignal.importance === 'high' ? 'destructive' :
               selectedSignal.importance === 'medium' ? 'default' : 'secondary'
-            }>
-              {selectedSignal.importance.toUpperCase()}
+            } className="uppercase">
+              {selectedSignal.importance}
             </Badge>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold mb-2">Description</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider text-muted-foreground">Description</h3>
+            <p className="text-sm text-foreground leading-relaxed">
               {selectedSignal.description}
             </p>
           </div>
 
           {selectedSignal.externalUrl && (
-            <Button variant="outline" className="w-full" asChild>
+            <Button variant="secondary" className="w-full bg-button-base hover:bg-button-hover" asChild>
               <a href={selectedSignal.externalUrl} target="_blank" rel="noopener noreferrer">
                 Open Source
               </a>
@@ -105,10 +105,10 @@ export function InspectorPanel({
     const changePercent = firstValue > 0 ? (change / firstValue) * 100 : 0;
 
     return (
-      <div className="w-96 bg-card border-l border-border p-6 space-y-4 overflow-y-auto">
+      <div className="p-6 space-y-6">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-xl font-bold text-foreground mb-1">{selectedAsset.name}</h2>
+            <h2 className="text-xl font-bold text-foreground mb-2">{selectedAsset.name}</h2>
             <div className="flex items-center gap-2 mb-2">
               <Badge className={BAND_COLORS[selectedAsset.entropyBand]}>
                 {ENTROPY_BAND_INFO[selectedAsset.entropyBand].name}
@@ -121,47 +121,47 @@ export function InspectorPanel({
               {selectedAsset.categoryPath.join(' / ')}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => onSelectAsset(null)}>
+          <Button variant="ghost" size="sm" onClick={() => onSelectAsset(null)} className="hover:bg-button-hover">
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <Card>
+        <Card className="bg-secondary/50 border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Entropy Profile</CardTitle>
+            <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">Entropy Profile</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Score</span>
-              <span className="text-sm font-mono font-semibold">{selectedAsset.entropyScore}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Score</span>
+              <span className="text-lg font-mono font-semibold text-primary">{selectedAsset.entropyScore}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Band</span>
-              <span className="text-sm">{ENTROPY_BAND_INFO[selectedAsset.entropyBand].range}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Band</span>
+              <span className="text-sm text-foreground">{ENTROPY_BAND_INFO[selectedAsset.entropyBand].range}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-secondary/50 border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Performance</CardTitle>
+            <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">Performance</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Current Value</span>
-              <span className="text-sm font-mono font-semibold">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Current Value</span>
+              <span className="text-lg font-mono font-semibold text-foreground">
                 ${currentValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">Total Change</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Total Change</span>
               <div className="flex items-center gap-1">
                 {change >= 0 ? (
-                  <TrendingUp className="h-3 w-3 text-green-500" />
+                  <TrendingUp className="h-4 w-4 text-green-500" />
                 ) : (
-                  <TrendingDown className="h-3 w-3 text-red-500" />
+                  <TrendingDown className="h-4 w-4 text-red-500" />
                 )}
-                <span className={`text-sm font-mono font-semibold ${change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                <span className={`text-lg font-mono font-semibold ${change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                   {changePercent >= 0 ? '+' : ''}{changePercent.toFixed(1)}%
                 </span>
               </div>
@@ -179,39 +179,39 @@ export function InspectorPanel({
     const bandAssets = getAssetsInBand(assets, selectedBand);
 
     return (
-      <div className="w-96 bg-card border-l border-border flex flex-col overflow-hidden">
-        <div className="p-6 space-y-4 border-b border-border">
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="p-6 space-y-6 border-b border-border">
           <div className="flex items-start justify-between">
             <div>
-              <Badge className={`${BAND_COLORS[selectedBand]} mb-2`}>
+              <Badge className={`${BAND_COLORS[selectedBand]} mb-2 uppercase tracking-wider`}>
                 {info.name}
               </Badge>
               <h2 className="text-xl font-bold text-foreground">
                 Entropy {info.range}
               </h2>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose} className="hover:bg-button-hover">
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <p className="text-sm text-foreground leading-relaxed">
             {info.description}
           </p>
 
           <div className="grid grid-cols-2 gap-4">
-            <Card>
+            <Card className="bg-secondary/50 border-border">
               <CardContent className="pt-4 pb-4">
-                <div className="text-xs text-muted-foreground mb-1">Current Value</div>
-                <div className="text-lg font-bold font-mono">
+                <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wider">Current Value</div>
+                <div className="text-xl font-bold font-mono text-foreground">
                   ${stats.currentValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-secondary/50 border-border">
               <CardContent className="pt-4 pb-4">
-                <div className="text-xs text-muted-foreground mb-1">Avg Entropy</div>
-                <div className="text-lg font-bold font-mono">
+                <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wider">Avg Entropy</div>
+                <div className="text-xl font-bold font-mono text-primary">
                   {stats.avgEntropy.toFixed(1)}
                 </div>
               </CardContent>
@@ -220,7 +220,7 @@ export function InspectorPanel({
         </div>
 
         <div className="p-6 flex-1 overflow-hidden flex flex-col">
-          <h3 className="text-sm font-semibold mb-3">
+          <h3 className="text-xs font-semibold mb-3 uppercase tracking-wider text-muted-foreground">
             Assets ({bandAssets.length})
           </h3>
           <ScrollArea className="flex-1">
@@ -228,12 +228,12 @@ export function InspectorPanel({
               {bandAssets.map(asset => (
                 <Button
                   key={asset.id}
-                  variant="outline"
-                  className="w-full justify-start text-left h-auto py-3"
+                  variant="secondary"
+                  className="w-full justify-start text-left h-auto py-3 bg-button-base hover:bg-button-hover transition-colors"
                   onClick={() => onSelectAsset(asset)}
                 >
                   <div className="flex-1">
-                    <div className="font-medium text-sm">{asset.name}</div>
+                    <div className="font-medium text-sm text-foreground">{asset.name}</div>
                     <div className="text-xs text-muted-foreground">
                       {asset.categoryPath[asset.categoryPath.length - 1]}
                     </div>

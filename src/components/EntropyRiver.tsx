@@ -17,11 +17,11 @@ interface EntropyRiverProps {
 }
 
 const BAND_COLORS: Record<EntropyBandId, string> = {
-  cold: '#0B7285',
-  mild: '#2196F3',
-  warm: '#FFC857',
-  hot: '#F77F00',
-  very_hot: '#D62828',
+  cold: '#8EC9FF',    // Neon blue bright
+  mild: '#5FAFEA',    // Neon blue mid
+  warm: '#FFC857',    // Keep warm for contrast
+  hot: '#F77F00',     // Keep hot for contrast
+  very_hot: '#D62828', // Keep very hot for contrast
 };
 
 const BAND_ORDER: EntropyBandId[] = ['cold', 'mild', 'warm', 'hot', 'very_hot'];
@@ -58,6 +58,35 @@ export function EntropyRiver({
       .attr('width', width)
       .attr('height', height);
 
+    // Define gradients for QPLIX style
+    const defs = svg.append('defs');
+    
+    // Gradient for each band
+    BAND_ORDER.forEach(bandId => {
+      const gradient = defs.append('linearGradient')
+        .attr('id', `gradient-${bandId}`)
+        .attr('x1', '0%')
+        .attr('y1', '0%')
+        .attr('x2', '0%')
+        .attr('y2', '100%');
+      
+      const baseColor = BAND_COLORS[bandId];
+      gradient.append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', baseColor)
+        .attr('stop-opacity', 0.50);
+      
+      gradient.append('stop')
+        .attr('offset', '50%')
+        .attr('stop-color', baseColor)
+        .attr('stop-opacity', 0.25);
+      
+      gradient.append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', baseColor)
+        .attr('stop-opacity', 0.00);
+    });
+
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
@@ -87,34 +116,55 @@ export function EntropyRiver({
       .y1(d => yScale(d[1]))
       .curve(d3.curveCatmullRom.alpha(0.5));
 
-    // Draw areas
+    // Draw areas with QPLIX gradient style
     const bands = g.append('g')
       .selectAll('path')
       .data(series)
       .join('path')
-      .attr('fill', d => BAND_COLORS[d.key as EntropyBandId])
+      .attr('fill', d => `url(#gradient-${d.key})`)
       .attr('d', area)
-      .attr('opacity', d => selectedBand === null || selectedBand === d.key ? 0.85 : 0.3)
-      .attr('stroke', d => selectedBand === d.key ? '#fff' : 'none')
-      .attr('stroke-width', d => selectedBand === d.key ? 2 : 0)
+      .attr('opacity', d => selectedBand === null || selectedBand === d.key ? 1 : 0.3)
+      .attr('stroke', d => {
+        if (selectedBand === d.key) return '#B9DCFF';
+        return BAND_COLORS[d.key as EntropyBandId];
+      })
+      .attr('stroke-width', d => selectedBand === d.key ? 3 : 2)
+      .attr('stroke-linejoin', 'round')
+      .attr('stroke-linecap', 'round')
       .style('cursor', 'pointer')
-      .style('transition', 'opacity 0.3s, stroke-width 0.3s')
+      .style('transition', 'all 0.3s ease-out')
+      .style('filter', d => selectedBand === d.key ? 'drop-shadow(0 0 8px rgba(185, 220, 255, 0.6))' : 'none')
       .on('click', (event, d) => {
         event.stopPropagation();
         onBandClick(d.key as EntropyBandId);
       })
       .on('mouseenter', function(event, d) {
         if (selectedBand === null) {
-          d3.select(this).attr('opacity', 1);
+          d3.select(this)
+            .attr('opacity', 1)
+            .style('filter', 'brightness(1.1) drop-shadow(0 0 6px rgba(185, 220, 255, 0.4))');
         }
       })
       .on('mouseleave', function(event, d) {
         if (selectedBand === null || selectedBand !== d.key) {
-          d3.select(this).attr('opacity', selectedBand === null ? 0.85 : 0.3);
+          d3.select(this)
+            .attr('opacity', selectedBand === null ? 1 : 0.3)
+            .style('filter', selectedBand === d.key ? 'drop-shadow(0 0 8px rgba(185, 220, 255, 0.6))' : 'none');
         }
       });
 
-    // Axes
+    // Gridlines (QPLIX style)
+    g.append('g')
+      .attr('class', 'grid')
+      .call(d3.axisLeft(yScale)
+        .ticks(6)
+        .tickSize(-innerWidth)
+        .tickFormat(() => '')
+      )
+      .attr('stroke', 'rgba(255, 255, 255, 0.06)')
+      .attr('stroke-width', 1);
+
+    // Axes with QPLIX colors
     const xAxis = d3.axisBottom(xScale)
       .tickValues(d3.range(0, data.length, 12))
       .tickFormat(i => data[+i]?.date.split('-')[0] || '');
@@ -122,10 +172,11 @@ export function EntropyRiver({
     g.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
       .call(xAxis)
-      .attr('color', '#9CA3AF')
+      .attr('color', 'rgba(255, 255, 255, 0.55)')
       .selectAll('text')
-      .attr('font-family', 'IBM Plex Mono, monospace')
-      .attr('font-size', '12px');
+      .attr('font-family', 'Inter, system-ui, sans-serif')
+      .attr('font-size', '12px')
+      .attr('fill', 'rgba(255, 255, 255, 0.70)');
 
     const yAxis = d3.axisLeft(yScale)
       .ticks(6)
@@ -133,21 +184,23 @@ export function EntropyRiver({
 
     g.append('g')
       .call(yAxis)
-      .attr('color', '#9CA3AF')
+      .attr('color', 'rgba(255, 255, 255, 0.55)')
       .selectAll('text')
-      .attr('font-family', 'IBM Plex Mono, monospace')
-      .attr('font-size', '12px');
+      .attr('font-family', 'Inter, system-ui, sans-serif')
+      .attr('font-size', '12px')
+      .attr('fill', 'rgba(255, 255, 255, 0.70)');
 
-    // Current date cursor
+    // Current date cursor with QPLIX style
     g.append('line')
       .attr('x1', xScale(currentDateIndex))
       .attr('x2', xScale(currentDateIndex))
       .attr('y1', 0)
       .attr('y2', innerHeight)
-      .attr('stroke', '#fff')
+      .attr('stroke', '#4DA3F7')
       .attr('stroke-width', 2)
       .attr('stroke-dasharray', '5,5')
-      .attr('opacity', 0.8);
+      .attr('opacity', 0.8)
+      .style('filter', 'drop-shadow(0 0 4px rgba(77, 163, 247, 0.5))');
 
     // Fed Funds Rate
     if (showFedRate && fedRates.length > 0) {
@@ -229,8 +282,9 @@ export function EntropyRiver({
         group.append('circle')
           .attr('r', selectedSignal === d.id ? 6 : 4)
           .attr('fill', SIGNAL_COLORS[d.type])
-          .attr('stroke', selectedSignal === d.id ? '#fff' : 'none')
-          .attr('stroke-width', 2);
+          .attr('stroke', selectedSignal === d.id ? '#B9DCFF' : 'none')
+          .attr('stroke-width', 2)
+          .style('filter', selectedSignal === d.id ? 'drop-shadow(0 0 6px rgba(185, 220, 255, 0.6))' : 'none');
 
         group.append('line')
           .attr('x1', 0)
@@ -252,7 +306,7 @@ export function EntropyRiver({
   }, [data, currentDateIndex, selectedBand, signals, selectedSignal, showFedRate, fedRates, onBandClick, onSignalClick, entropyThreshold]);
 
   return (
-    <div ref={containerRef} className="flex-1 bg-chart-background">
+    <div ref={containerRef} className="flex-1 bg-card rounded-lg shadow-qplix">
       <svg ref={svgRef} className="w-full h-full" />
     </div>
   );
