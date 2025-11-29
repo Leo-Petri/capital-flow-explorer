@@ -31,18 +31,10 @@ const Index = () => {
     });
   }, []);
 
-  if (!dataLoaded || !portfolioData) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
-          <p className="text-lg text-muted-foreground">Loading portfolio data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const { MONTHLY_DATES, ASSETS, ASSET_KPI_DATA } = portfolioData;
+  // Get data with safe defaults
+  const MONTHLY_DATES = portfolioData?.MONTHLY_DATES || [];
+  const ASSETS = portfolioData?.ASSETS || [];
+  const ASSET_KPI_DATA = portfolioData?.ASSET_KPI_DATA || [];
   const currentDate = MONTHLY_DATES[currentDateIndex];
 
   // Filter assets based on mode
@@ -56,16 +48,16 @@ const Index = () => {
     }
     
     return filtered;
-  }, [filterMode]);
+  }, [ASSETS, filterMode]);
 
   // Aggregate data for visualization
   const stackedData = useMemo(() => {
     return aggregateByEntropyBand(filteredAssets, ASSET_KPI_DATA, selectedKpi);
-  }, [filteredAssets, selectedKpi]);
+  }, [filteredAssets, ASSET_KPI_DATA, selectedKpi]);
 
   // Play/pause animation
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying || MONTHLY_DATES.length === 0) return;
     
     const interval = setInterval(() => {
       setCurrentDateIndex(prev => {
@@ -78,7 +70,19 @@ const Index = () => {
     }, 150);
     
     return () => clearInterval(interval);
-  }, [isPlaying]);
+  }, [isPlaying, MONTHLY_DATES.length]);
+
+  // Show loading state without early return to preserve hook order
+  if (!dataLoaded) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
+          <p className="text-lg text-muted-foreground">Loading portfolio data...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleBandClick = (band: EntropyBandId | null) => {
     setSelectedBand(band);
