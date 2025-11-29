@@ -170,17 +170,36 @@ let cachedData: {
 export async function loadClientData() {
   if (cachedData) return cachedData;
   
+  console.log('📥 Loading JSON file...');
+  const startTime = performance.now();
+  
   const { transformClientData } = await import('@/lib/dataTransformer');
   const response = await fetch('/data/full_asset_analysis.json');
-  const clientDataRaw = await response.json();
   
+  if (!response.ok) {
+    throw new Error(`Failed to load data: ${response.statusText}`);
+  }
+  
+  console.log('📦 Parsing JSON...');
+  const parseStart = performance.now();
+  const clientDataRaw = await response.json();
+  const parseTime = performance.now() - parseStart;
+  console.log(`✅ JSON parsed in ${(parseTime / 1000).toFixed(2)}s (${clientDataRaw.length} assets)`);
+  
+  console.log('🔄 Transforming data...');
+  const transformStart = performance.now();
   const transformedData = transformClientData(clientDataRaw);
+  const transformTime = performance.now() - transformStart;
+  console.log(`✅ Data transformed in ${(transformTime / 1000).toFixed(2)}s`);
   
   cachedData = {
     MONTHLY_DATES: transformedData.monthlyDates,
     ASSETS: transformedData.assets,
     ASSET_KPI_DATA: transformedData.kpiData,
   };
+  
+  const totalTime = performance.now() - startTime;
+  console.log(`🎉 Total loading time: ${(totalTime / 1000).toFixed(2)}s`);
   
   return cachedData;
 }

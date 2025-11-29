@@ -6,6 +6,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { KpiId } from '@/data/mockData';
 
+function formatDate(dateStr: string): string {
+  // Handle both YYYY-MM-DD and YYYY-MM formats
+  if (dateStr.includes('-')) {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      // YYYY-MM-DD format
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } else if (parts.length === 2) {
+      // YYYY-MM format
+      const date = new Date(dateStr + '-01');
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long' 
+      });
+    }
+  }
+  return dateStr;
+}
+
 interface ControlsPanelProps {
   currentDateIndex: number;
   maxDateIndex: number;
@@ -48,7 +72,7 @@ export function ControlsPanel({
   onShowFedRateChange,
 }: ControlsPanelProps) {
   return (
-    <div className="space-y-8">
+    <div className="w-80 bg-card border-r border-border p-6 space-y-8 overflow-y-auto">
       <div>
         <h1 className="text-2xl font-bold text-foreground mb-1">River of Wealth</h1>
         <p className="text-sm text-muted-foreground">Entropy Lens Portfolio</p>
@@ -57,19 +81,19 @@ export function ControlsPanel({
       {/* Timeline */}
       <div className="space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Timeline</h2>
+          <h2 className="text-sm font-semibold text-foreground mb-3">Timeline</h2>
           <div className="flex items-center gap-2 mb-3">
             <Button
               size="sm"
-              variant="secondary"
+              variant="outline"
               onClick={onPlayPause}
-              className="w-10 h-10 p-0 bg-button-base hover:bg-button-hover transition-colors"
+              className="w-10 h-10 p-0"
             >
               {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
             <div className="flex-1">
-              <p className="text-sm font-mono text-foreground">
-                {currentDate}
+              <p className="text-sm font-mono text-muted-foreground">
+                {formatDate(currentDate)}
               </p>
             </div>
           </div>
@@ -85,11 +109,11 @@ export function ControlsPanel({
 
       {/* View Filters */}
       <div className="space-y-4">
-        <h2 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">View</h2>
+        <h2 className="text-sm font-semibold text-foreground mb-3">View</h2>
         <div className="flex gap-2">
           <Button
             size="sm"
-            variant={filterMode === 'all' ? 'default' : 'secondary'}
+            variant={filterMode === 'all' ? 'default' : 'outline'}
             onClick={() => onFilterModeChange('all')}
             className="flex-1"
           >
@@ -97,7 +121,7 @@ export function ControlsPanel({
           </Button>
           <Button
             size="sm"
-            variant={filterMode === 'liquid' ? 'default' : 'secondary'}
+            variant={filterMode === 'liquid' ? 'default' : 'outline'}
             onClick={() => onFilterModeChange('liquid')}
             className="flex-1"
           >
@@ -105,7 +129,7 @@ export function ControlsPanel({
           </Button>
           <Button
             size="sm"
-            variant={filterMode === 'illiquid' ? 'default' : 'secondary'}
+            variant={filterMode === 'illiquid' ? 'default' : 'outline'}
             onClick={() => onFilterModeChange('illiquid')}
             className="flex-1"
           >
@@ -114,8 +138,8 @@ export function ControlsPanel({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-sm text-muted-foreground uppercase tracking-wider">
-            Entropy Threshold: <span className="text-primary font-semibold">{entropyThreshold}</span>
+          <Label className="text-sm">
+            Entropy Threshold: {entropyThreshold}
           </Label>
           <Slider
             value={[entropyThreshold]}
@@ -132,11 +156,11 @@ export function ControlsPanel({
 
       {/* KPI Selection */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">KPI</h2>
+        <h2 className="text-sm font-semibold text-foreground mb-3">KPI</h2>
         <div className="space-y-2">
-          <Label className="text-sm text-muted-foreground uppercase tracking-wider">View KPI as Y-Axis</Label>
+          <Label className="text-sm">View KPI as Y-Axis</Label>
           <Select value={selectedKpi} onValueChange={(val) => onKpiChange(val as KpiId)}>
-            <SelectTrigger className="bg-button-base hover:bg-button-hover transition-colors">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -152,9 +176,9 @@ export function ControlsPanel({
 
       {/* Fed Rate Toggle */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Overlays</h2>
+        <h2 className="text-sm font-semibold text-foreground mb-3">Overlays</h2>
         <div className="flex items-center justify-between">
-          <Label htmlFor="fed-rate" className="text-sm cursor-pointer text-muted-foreground">
+          <Label htmlFor="fed-rate" className="text-sm cursor-pointer">
             Show Fed Funds Rate
           </Label>
           <Switch

@@ -10,6 +10,13 @@ export interface RawTransaction {
   profit: number;
 }
 
+export interface DailyChange {
+  date: string;
+  nav: number;
+  change: number | null;
+  change_percent: number | null;
+}
+
 export interface RawAssetData {
   asset: string;
   volatility: number;
@@ -17,6 +24,7 @@ export interface RawAssetData {
   purchase_price: number;
   total_profit: number;
   transactions_detail: RawTransaction[];
+  daily_changes: DailyChange[];
 }
 
 interface AssetClassification {
@@ -133,78 +141,157 @@ function getEntropyBand(score: number): EntropyBandId {
   return 'very_hot';
 }
 
-function generateMonthlyDates(startDate: string, endDate: string): string[] {
+function generateDailyDates(startDate: string, endDate: string): string[] {
   const dates: string[] = [];
   const start = new Date(startDate);
   const end = new Date(endDate);
   
-  let current = new Date(start.getFullYear(), start.getMonth(), 1);
+  // Set to start of day
+  const current = new Date(start);
+  current.setHours(0, 0, 0, 0);
   
   while (current <= end) {
     const year = current.getFullYear();
     const month = (current.getMonth() + 1).toString().padStart(2, '0');
-    dates.push(`${year}-${month}`);
-    current.setMonth(current.getMonth() + 1);
+    const day = current.getDate().toString().padStart(2, '0');
+    dates.push(`${year}-${month}-${day}`);
+    current.setDate(current.getDate() + 1);
   }
   
   return dates;
 }
 
-function interpolateValue(
-  buyDate: string,
-  sellDate: string,
-  buyNav: number,
-  sellNav: number,
-  targetDate: string
-): number {
-  const buy = new Date(buyDate);
-  const sell = new Date(sellDate);
-  const target = new Date(targetDate + '-01');
+function createNavMap(dailyChanges: DailyChange[]): Map<string, number> {
+  // Create a map of date -> NAV for fast lookup
+  const navMap = new Map<string, number>();
+  let lastNav = 0;
   
-  // Before purchase
-  if (target < buy) return 0;
+  // Sort by date and create map, carrying forward last known NAV
+  const sorted = [...dailyChanges].sort((a, b) => a.date.localeCompare(b.date));
   
-  // After sale
-  if (target > sell) return 0;
+  sorted.forEach(change => {
+    lastNav = change.nav;
+    navMap.set(change.date, change.nav);
+  });
   
-  // Linear interpolation
-  const totalTime = sell.getTime() - buy.getTime();
-  const elapsedTime = target.getTime() - buy.getTime();
-  const ratio = elapsedTime / totalTime;
+  return navMap;
+}
+
+function getNavForDate(navMap: Map<string, number>, targetDate: string): number {
+  // Try exact match first
+  if (navMap.has(targetDate)) {
+    return navMap.get(targetDate)!;
+  }
   
-  return buyNav + (sellNav - buyNav) * ratio;
+  // Find the most recent NAV value before the target date
+  const target = new Date(targetDate);
+  let lastNav = 0;
+  let lastDate = new Date(0);
+  
+  navMap.forEach((nav, dateStr) => {
+    const changeDate = new Date(dateStr);
+    if (changeDate <= target && changeDate >= lastDate) {
+      lastNav = nav;
+      lastDate = changeDate;
+    }
+  });
+  
+  return lastNav;
 }
 
 export function transformClientData(rawData: RawAssetData[]): {
   assets: Asset[];
   kpiData: AssetKpiPoint[];
-  monthlyDates: string[];
+  monthlyDates: string[]; // Keep name for compatibility, but now contains daily dates
 } {
   console.log('🔄 Starting transformation of', rawData.length, 'raw data entries');
   
-  // Deduplicate by asset name and merge transactions
+  // Filter to only show data from 2019 onwards
+  const minDate = '2019-01-01';
+  const minDateObj = new Date(minDate);
+  minDateObj.setHours(0, 0, 0, 0);
+  
+  // Cap latest date to today
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const latestDate = now.toISOString().split('T')[0];
+  
+  // Deduplicate by asset name and merge daily_changes
   const assetMap = new Map<string, {
     volatility: number;
     interestRate: number | string;
     totalProfit: number;
     transactions: RawTransaction[];
+    dailyChanges: DailyChange[];
   }>();
   
+  // Optimize: Pre-filter daily_changes more efficiently
   rawData.forEach(item => {
+    const dailyChanges = item.daily_changes || [];
+    
+    // Quick filter: string comparison is faster than Date object creation
+    // Only create Date objects for dates that pass the string check
+    const filteredDailyChanges: DailyChange[] = [];
+    for (let i = 0; i < dailyChanges.length; i++) {
+      const dc = dailyChanges[i];
+      // String comparison first (much faster)
+      if (dc.date >= minDate && dc.date <= latestDate) {
+        filteredDailyChanges.push(dc);
+      }
+    }
+    
+    // Skip assets with no daily data from 2019 onwards
+    if (filteredDailyChanges.length === 0) {
+      return;
+    }
+    
     const existing = assetMap.get(item.asset);
     if (existing) {
+      // Merge daily changes, keeping the most recent value for each date
+      const dateMap = new Map<string, DailyChange>();
+      existing.dailyChanges.forEach(dc => dateMap.set(dc.date, dc));
+      filteredDailyChanges.forEach(dc => dateMap.set(dc.date, dc));
+      existing.dailyChanges = Array.from(dateMap.values()).sort((a, b) => 
+        a.date.localeCompare(b.date)
+      );
       existing.transactions.push(...item.transactions_detail);
     } else {
       assetMap.set(item.asset, {
         volatility: item.volatility,
         interestRate: item.interest_rate,
         totalProfit: item.total_profit,
-        transactions: [...item.transactions_detail]
+        transactions: [...item.transactions_detail],
+        dailyChanges: filteredDailyChanges.sort((a, b) => a.date.localeCompare(b.date))
       });
     }
   });
   
-  console.log('📋 Unique assets after deduplication:', assetMap.size);
+  console.log('📋 Unique assets after deduplication and filtering:', assetMap.size);
+  
+  // Collect all unique dates from all assets' daily changes
+  const allDatesSet = new Set<string>();
+  assetMap.forEach(data => {
+    data.dailyChanges.forEach(dc => {
+      if (dc.date >= minDate && dc.date <= latestDate) {
+        allDatesSet.add(dc.date);
+      }
+    });
+  });
+  
+  // Generate sorted daily dates array
+  let dailyDates = Array.from(allDatesSet).sort();
+  
+  // Sample dates to improve performance - show every Nth day instead of every day
+  // This reduces data points significantly while maintaining good granularity
+  // With ~2500 days from 2019-2025, sampling every 3rd day gives ~833 days (66% reduction)
+  const SAMPLE_INTERVAL = 3; // Show every 3rd day (can be adjusted: 1=every day, 2=every other day, 3=every 3rd day, etc.)
+  if (SAMPLE_INTERVAL > 1 && dailyDates.length > 1000) {
+    const originalLength = dailyDates.length;
+    dailyDates = dailyDates.filter((_, index) => index % SAMPLE_INTERVAL === 0);
+    console.log(`📊 Sampling dates: ${originalLength} → ${dailyDates.length} days (every ${SAMPLE_INTERVAL} days)`);
+  }
+  
+  console.log('📅 Daily dates range:', dailyDates[0], 'to', dailyDates[dailyDates.length - 1], `(${dailyDates.length} days)`);
   
   // Generate assets with classification
   const assets: Asset[] = [];
@@ -226,78 +313,68 @@ export function transformClientData(rawData: RawAssetData[]): {
     });
   });
   
-  // Find date range from all transactions
-  let earliestDate = '2019-01-01';
-  
-  // Cap latest date to current month
-  const now = new Date();
-  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-  let latestDate = currentYearMonth;
-  
-  assetMap.forEach(data => {
-    data.transactions.forEach(tx => {
-      if (tx.buy_date < earliestDate) earliestDate = tx.buy_date;
-      // Only consider sell dates up to today
-      if (tx.sell_date > latestDate && tx.sell_date <= currentYearMonth) {
-        latestDate = tx.sell_date;
-      }
-    });
-  });
-  
-  // Generate monthly dates (up to current month)
-  const monthlyDates = generateMonthlyDates(earliestDate, latestDate);
-  
-  // Generate KPI data
+  // Generate KPI data using actual daily NAV values
   const kpiData: AssetKpiPoint[] = [];
   const kpis: KpiId[] = ['nav', 'pl', 'twr', 'quoted_alloc', 'cf'];
+  
+  // Track initial NAV for each asset (first NAV value from 2019)
+  const assetInitialNav = new Map<string, number>();
+  const assetNavMaps = new Map<string, Map<string, number>>();
   
   assets.forEach(asset => {
     const rawAsset = assetMap.get(asset.name)!;
     
-    monthlyDates.forEach((date, idx) => {
-      // Calculate NAV by summing all active transactions at this date
-      let totalNav = 0;
-      let totalInitialNav = 0;
+    // Create NAV map for fast lookup
+    const navMap = createNavMap(rawAsset.dailyChanges);
+    assetNavMaps.set(asset.id, navMap);
+    
+    // Find initial NAV (first NAV value from 2019)
+    if (rawAsset.dailyChanges.length > 0) {
+      const firstNav = rawAsset.dailyChanges[0].nav;
+      assetInitialNav.set(asset.id, firstNav);
+    }
+  });
+  
+  // Optimize: Only generate KPI data for assets that have data on the sampled dates
+  assets.forEach(asset => {
+    const rawAsset = assetMap.get(asset.name)!;
+    const navMap = assetNavMaps.get(asset.id)!;
+    const initialNav = assetInitialNav.get(asset.id) || 0;
+    
+    // Pre-calculate values that don't change per date
+    const totalProfit = rawAsset.totalProfit;
+    
+    dailyDates.forEach((date, idx) => {
+      // Get NAV for this date from daily_changes
+      const nav = getNavForDate(navMap, date);
       
-      rawAsset.transactions.forEach(tx => {
-        const nav = interpolateValue(tx.buy_date, tx.sell_date, tx.buy_nav, tx.sell_nav, date);
-        totalNav += nav;
-        if (nav > 0) totalInitialNav += tx.buy_nav;
-      });
+      // Calculate all KPIs for this date (pre-calculate to avoid repeated calculations)
+      const pl = nav - initialNav;
+      const twr = initialNav > 0 ? ((nav / initialNav - 1) * 100) : 0;
+      const progress = idx / dailyDates.length;
+      const cf = totalProfit * progress;
+      const navValue = Math.max(0, nav);
       
-      kpis.forEach(kpi => {
-        let value = 0;
-        
-        if (kpi === 'nav') {
-          value = totalNav;
-        } else if (kpi === 'pl') {
-          // Unrealized P/L
-          value = totalNav - totalInitialNav;
-        } else if (kpi === 'twr') {
-          // Time-weighted return (%)
-          value = totalInitialNav > 0 ? ((totalNav / totalInitialNav - 1) * 100) : 0;
-        } else if (kpi === 'quoted_alloc') {
-          // Will be calculated as % later
-          value = totalNav;
-        } else if (kpi === 'cf') {
-          // Cash flow (simplified: just profit distributed over time)
-          const monthProgress = idx / monthlyDates.length;
-          value = rawAsset.totalProfit * monthProgress;
-        }
-        
-        kpiData.push({
-          date,
-          assetId: asset.id,
-          kpi,
-          value: Math.max(0, value)
-        });
-      });
+      // Push all KPIs at once (more efficient than individual pushes)
+      kpiData.push(
+        { date, assetId: asset.id, kpi: 'nav', value: navValue },
+        { date, assetId: asset.id, kpi: 'pl', value: pl },
+        { date, assetId: asset.id, kpi: 'twr', value: twr },
+        { date, assetId: asset.id, kpi: 'quoted_alloc', value: navValue },
+        { date, assetId: asset.id, kpi: 'cf', value: cf }
+      );
     });
+  });
+  
+  console.log('✅ Transformation complete:', {
+    assets: assets.length,
+    kpiDataPoints: kpiData.length,
+    dateRange: `${dailyDates[0]} to ${dailyDates[dailyDates.length - 1]}`
   });
   
   return {
     assets,
     kpiData,
-    monthlyDates
+    monthlyDates: dailyDates // Using daily dates but keeping the name for compatibility
   };
 }

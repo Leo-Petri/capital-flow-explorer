@@ -1,9 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
-import { ControlsPanel } from '@/components/ControlsPanel';
-import { EntropyRiver } from '@/components/EntropyRiver';
-import { InspectorPanel } from '@/components/InspectorPanel';
-import { loadClientData, SIGNALS, FED_RATES, KpiId, EntropyBandId, Asset, Signal } from '@/data/mockData';
-import { aggregateByEntropyBand } from '@/lib/aggregation';
+import { useState, useEffect, useMemo } from "react";
+import { ControlsPanel } from "@/components/ControlsPanel";
+import { EntropyRiver } from "@/components/EntropyRiver";
+import { InspectorPanel } from "@/components/InspectorPanel";
+import {
+  loadClientData,
+  SIGNALS,
+  FED_RATES,
+  KpiId,
+  EntropyBandId,
+  Asset,
+  Signal,
+} from "@/data/mockData";
+import { aggregateByEntropyBand } from "@/lib/aggregation";
 
 const Index = () => {
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -12,12 +20,14 @@ const Index = () => {
     ASSETS: Asset[];
     ASSET_KPI_DATA: any[];
   } | null>(null);
-  
+
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [filterMode, setFilterMode] = useState<'all' | 'liquid' | 'illiquid'>('all');
+  const [filterMode, setFilterMode] = useState<"all" | "liquid" | "illiquid">(
+    "all"
+  );
   const [entropyThreshold, setEntropyThreshold] = useState(0);
-  const [selectedKpi, setSelectedKpi] = useState<KpiId>('nav');
+  const [selectedKpi, setSelectedKpi] = useState<KpiId>("nav");
   const [showFedRate, setShowFedRate] = useState(true);
   const [selectedBand, setSelectedBand] = useState<EntropyBandId | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
@@ -25,19 +35,28 @@ const Index = () => {
 
   // Load client data on mount
   useEffect(() => {
-    loadClientData().then(data => {
-      console.log('✅ Portfolio data loaded:', {
-        assetsCount: data.ASSETS.length,
-        datesCount: data.MONTHLY_DATES.length,
-        kpiDataCount: data.ASSET_KPI_DATA.length,
-        firstAsset: data.ASSETS[0],
-        dateRange: `${data.MONTHLY_DATES[0]} to ${data.MONTHLY_DATES[data.MONTHLY_DATES.length - 1]}`
-      });
-      setPortfolioData(data);
-      setDataLoaded(true);
-    }).catch(err => {
-      console.error('❌ Failed to load portfolio data:', err);
-    });
+    const loadData = async () => {
+      try {
+        const data = await loadClientData();
+        console.log("✅ Portfolio data loaded:", {
+          assetsCount: data.ASSETS.length,
+          datesCount: data.MONTHLY_DATES.length,
+          kpiDataCount: data.ASSET_KPI_DATA.length,
+          firstAsset: data.ASSETS[0],
+          dateRange: `${data.MONTHLY_DATES[0]} to ${
+            data.MONTHLY_DATES[data.MONTHLY_DATES.length - 1]
+          }`,
+        });
+        setPortfolioData(data);
+        setDataLoaded(true);
+      } catch (err) {
+        console.error("❌ Failed to load portfolio data:", err);
+        // Show error to user
+        alert("Failed to load portfolio data. Please refresh the page.");
+      }
+    };
+    
+    loadData();
   }, []);
 
   // Get data with safe defaults
@@ -49,42 +68,47 @@ const Index = () => {
   // Filter assets based on mode
   const filteredAssets = useMemo(() => {
     let filtered = [...ASSETS];
-    
-    if (filterMode === 'liquid') {
-      filtered = filtered.filter(a => a.isLiquid);
-    } else if (filterMode === 'illiquid') {
-      filtered = filtered.filter(a => !a.isLiquid);
+
+    if (filterMode === "liquid") {
+      filtered = filtered.filter((a) => a.isLiquid);
+    } else if (filterMode === "illiquid") {
+      filtered = filtered.filter((a) => !a.isLiquid);
     }
-    
+
     return filtered;
   }, [ASSETS, filterMode]);
 
   // Aggregate data for visualization
   const stackedData = useMemo(() => {
-    const data = aggregateByEntropyBand(filteredAssets, ASSET_KPI_DATA, selectedKpi, MONTHLY_DATES);
-    console.log('📊 Stacked data:', {
+    const data = aggregateByEntropyBand(
+      filteredAssets,
+      ASSET_KPI_DATA,
+      selectedKpi,
+      MONTHLY_DATES
+    );
+    console.log("📊 Stacked data:", {
       length: data.length,
       firstDate: data[0]?.date,
-      bands: data[0] ? Object.keys(data[0]).filter(k => k !== 'date') : [],
-      sample: data[0]
+      bands: data[0] ? Object.keys(data[0]).filter((k) => k !== "date") : [],
+      sample: data[0],
     });
     return data;
   }, [filteredAssets, ASSET_KPI_DATA, selectedKpi, MONTHLY_DATES]);
 
-  // Play/pause animation
+  // Play/pause animation (slower for daily data)
   useEffect(() => {
     if (!isPlaying || MONTHLY_DATES.length === 0) return;
-    
+
     const interval = setInterval(() => {
-      setCurrentDateIndex(prev => {
+      setCurrentDateIndex((prev) => {
         if (prev >= MONTHLY_DATES.length - 1) {
           setIsPlaying(false);
           return prev;
         }
         return prev + 1;
       });
-    }, 150);
-    
+    }, 50); // Faster interval for daily data, but can be adjusted
+
     return () => clearInterval(interval);
   }, [isPlaying, MONTHLY_DATES.length]);
 
@@ -93,10 +117,10 @@ const Index = () => {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="text-center">
-          <div className="mb-4 h-16 w-16 animate-spin rounded-full border-4 border-primary/30 border-t-primary mx-auto" 
-               style={{ filter: 'drop-shadow(0 0 8px rgba(77, 163, 247, 0.4))' }} />
-          <p className="text-lg text-foreground font-semibold">Loading portfolio data...</p>
-          <p className="text-sm text-muted-foreground mt-1">Preparing your entropy visualization</p>
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
+          <p className="text-lg text-muted-foreground">
+            Loading portfolio data...
+          </p>
         </div>
       </div>
     );
@@ -109,7 +133,7 @@ const Index = () => {
   };
 
   const handleSignalClick = (signalId: string) => {
-    const signal = SIGNALS.find(s => s.id === signalId);
+    const signal = SIGNALS.find((s) => s.id === signalId);
     setSelectedSignal(signal || null);
     setSelectedBand(null);
     setSelectedAsset(null);
@@ -123,59 +147,48 @@ const Index = () => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
-      {/* Left Panel - Controls */}
-      <div className="w-80 bg-card border-r border-border overflow-y-auto shadow-qplix-sm">
-        <div className="p-6">
-          <ControlsPanel
-            currentDateIndex={currentDateIndex}
-            maxDateIndex={MONTHLY_DATES.length - 1}
-            currentDate={currentDate}
-            isPlaying={isPlaying}
-            onDateIndexChange={setCurrentDateIndex}
-            onPlayPause={() => setIsPlaying(!isPlaying)}
-            filterMode={filterMode}
-            onFilterModeChange={setFilterMode}
-            entropyThreshold={entropyThreshold}
-            onEntropyThresholdChange={setEntropyThreshold}
-            selectedKpi={selectedKpi}
-            onKpiChange={setSelectedKpi}
-            showFedRate={showFedRate}
-            onShowFedRateChange={setShowFedRate}
-          />
-        </div>
-      </div>
+      <ControlsPanel
+        currentDateIndex={currentDateIndex}
+        maxDateIndex={MONTHLY_DATES.length - 1}
+        currentDate={currentDate}
+        isPlaying={isPlaying}
+        onDateIndexChange={setCurrentDateIndex}
+        onPlayPause={() => setIsPlaying(!isPlaying)}
+        filterMode={filterMode}
+        onFilterModeChange={setFilterMode}
+        entropyThreshold={entropyThreshold}
+        onEntropyThresholdChange={setEntropyThreshold}
+        selectedKpi={selectedKpi}
+        onKpiChange={setSelectedKpi}
+        showFedRate={showFedRate}
+        onShowFedRateChange={setShowFedRate}
+      />
 
-      {/* Center Panel - Chart (Takes remaining space) */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <EntropyRiver
-          data={stackedData}
-          currentDateIndex={currentDateIndex}
-          onBandClick={handleBandClick}
-          selectedBand={selectedBand}
-          signals={SIGNALS}
-          onSignalClick={handleSignalClick}
-          selectedSignal={selectedSignal?.id || null}
-          showFedRate={showFedRate}
-          fedRates={FED_RATES}
-          entropyThreshold={entropyThreshold}
-        />
-      </div>
+      <EntropyRiver
+        data={stackedData}
+        currentDateIndex={currentDateIndex}
+        onBandClick={handleBandClick}
+        selectedBand={selectedBand}
+        signals={SIGNALS}
+        onSignalClick={handleSignalClick}
+        selectedSignal={selectedSignal?.id || null}
+        showFedRate={showFedRate}
+        fedRates={FED_RATES}
+        entropyThreshold={entropyThreshold}
+      />
 
-      {/* Right Panel - Inspector */}
-      <div className="w-96 bg-card border-l border-border overflow-y-auto shadow-qplix-sm">
-        <InspectorPanel
-          selectedBand={selectedBand}
-          selectedAsset={selectedAsset}
-          selectedSignal={selectedSignal}
-          assets={filteredAssets}
-          currentDate={currentDate}
-          selectedKpi={selectedKpi}
-          onSelectAsset={setSelectedAsset}
-          onClose={handleInspectorClose}
-          monthlyDates={MONTHLY_DATES}
-          assetKpiData={ASSET_KPI_DATA}
-        />
-      </div>
+      <InspectorPanel
+        selectedBand={selectedBand}
+        selectedAsset={selectedAsset}
+        selectedSignal={selectedSignal}
+        assets={filteredAssets}
+        currentDate={currentDate}
+        selectedKpi={selectedKpi}
+        onSelectAsset={setSelectedAsset}
+        onClose={handleInspectorClose}
+        monthlyDates={MONTHLY_DATES}
+        assetKpiData={ASSET_KPI_DATA}
+      />
     </div>
   );
 };

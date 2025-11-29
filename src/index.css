@@ -8,117 +8,99 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* QPLIX Dark Mode - Primary Colors */
-    --background: 210 36% 10%;        /* #0F1A24 */
-    --foreground: 0 0% 90%;           /* rgba(255,255,255,0.90) */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
 
-    --card: 210 35% 13%;              /* #15232F */
-    --card-foreground: 0 0% 90%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
 
-    --popover: 210 33% 16%;           /* #1A2A36 */
-    --popover-foreground: 0 0% 90%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
 
-    --primary: 207 89% 61%;           /* #4DA3F7 */
-    --primary-foreground: 0 0% 100%;
+    --primary: 215 30% 25%;
+    --primary-foreground: 210 20% 98%;
 
-    --secondary: 210 35% 18%;         /* #1E3242 */
-    --secondary-foreground: 0 0% 70%;
+    --secondary: 210 15% 92%;
+    --secondary-foreground: 215 25% 20%;
 
-    --muted: 210 35% 20%;             /* #254155 */
-    --muted-foreground: 0 0% 55%;
+    --muted: 210 15% 94%;
+    --muted-foreground: 215 15% 45%;
 
-    --accent: 207 89% 61%;            /* #4DA3F7 */
-    --accent-foreground: 0 0% 100%;
+    --accent: 188 85% 30%;
+    --accent-foreground: 210 20% 98%;
 
     --destructive: 0 70% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 20% 98%;
 
-    --border: 0 0% 100% / 0.05;       /* rgba(255,255,255,0.05) */
-    --input: 0 0% 100% / 0.08;
-    --ring: 207 89% 61%;
+    --border: 215 15% 88%;
+    --input: 215 15% 88%;
+    --ring: 215 30% 25%;
 
-    --radius: 0.375rem;               /* 6px rounded corners */
+    --radius: 0.5rem;
 
-    /* QPLIX Neon-Blue Gradient Colors */
-    --graph-bright: 207 100% 76%;     /* #8EC9FF */
-    --graph-mid: 203 77% 65%;         /* #5FAFEA */
-    --graph-deep: 200 44% 37%;        /* #356B8A */
-    --graph-glow: 207 100% 86%;       /* #B9DCFF */
-
-    /* Gradient stops for area fill */
-    --gradient-start: 207 100% 76% / 0.50;
-    --gradient-mid: 207 100% 76% / 0.25;
-    --gradient-end: 207 100% 76% / 0.00;
-
-    /* Entropy band colors - adjusted for dark mode */
-    --entropy-cold: 188 85% 40%;
-    --entropy-mild: 207 88% 65%;
-    --entropy-warm: 45 100% 67%;
-    --entropy-hot: 26 100% 55%;
-    --entropy-very-hot: 355 65% 55%;
+    /* Entropy band colors */
+    --entropy-cold: 188 85% 30%;      /* #0B7285 - teal */
+    --entropy-mild: 207 88% 54%;      /* #2196F3 - blue */
+    --entropy-warm: 45 100% 67%;      /* #FFC857 - yellow/gold */
+    --entropy-hot: 26 100% 49%;       /* #F77F00 - orange */
+    --entropy-very-hot: 355 65% 50%;  /* #D62828 - red */
 
     /* Chart specific */
-    --chart-background: 210 35% 13%;  /* Same as card */
-    --chart-grid: 0 0% 100% / 0.06;   /* rgba(255,255,255,0.06) */
-    --chart-text: 0 0% 70%;
+    --chart-background: 215 30% 18%;
+    --chart-grid: 215 20% 28%;
+    --chart-text: 210 20% 75%;
 
-    /* Interaction states */
-    --button-base: 210 35% 18%;       /* #1E3242 */
-    --button-hover: 210 35% 23%;      /* #254155 */
-    --button-active: 210 35% 28%;     /* #2F516B */
-
-    --sidebar-background: 210 36% 10%;
-    --sidebar-foreground: 0 0% 55%;
-    --sidebar-primary: 207 89% 61%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 35% 13%;
-    --sidebar-accent-foreground: 0 0% 85%;
-    --sidebar-border: 0 0% 100% / 0.05;
-    --sidebar-ring: 207 89% 61%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    /* Same as root for consistent dark mode */
-    --background: 210 36% 10%;
-    --foreground: 0 0% 90%;
+    --background: 215 30% 12%;
+    --foreground: 210 20% 95%;
 
-    --card: 210 35% 13%;
-    --card-foreground: 0 0% 90%;
+    --card: 215 28% 16%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 210 33% 16%;
-    --popover-foreground: 0 0% 90%;
+    --popover: 215 28% 16%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 207 89% 61%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 210 20% 95%;
+    --primary-foreground: 215 30% 15%;
 
-    --secondary: 210 35% 18%;
-    --secondary-foreground: 0 0% 70%;
+    --secondary: 215 25% 22%;
+    --secondary-foreground: 210 20% 95%;
 
-    --muted: 210 35% 20%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 215 25% 22%;
+    --muted-foreground: 215 15% 65%;
 
-    --accent: 207 89% 61%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 188 85% 35%;
+    --accent-foreground: 210 20% 98%;
 
-    --destructive: 0 65% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 210 20% 98%;
 
-    --border: 0 0% 100% / 0.05;
-    --input: 0 0% 100% / 0.08;
-    --ring: 207 89% 61%;
+    --border: 215 25% 24%;
+    --input: 215 25% 24%;
+    --ring: 210 20% 85%;
 
-    --chart-background: 210 35% 13%;
-    --chart-grid: 0 0% 100% / 0.06;
-    --chart-text: 0 0% 70%;
+    --chart-background: 215 30% 18%;
+    --chart-grid: 215 20% 28%;
+    --chart-text: 210 20% 75%;
 
-    --sidebar-background: 210 36% 10%;
-    --sidebar-foreground: 0 0% 55%;
-    --sidebar-primary: 207 89% 61%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 35% 13%;
-    --sidebar-accent-foreground: 0 0% 85%;
-    --sidebar-border: 0 0% 100% / 0.05;
-    --sidebar-ring: 207 89% 61%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 

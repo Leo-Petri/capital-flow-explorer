@@ -54,21 +54,10 @@ export default {
           hot: "hsl(var(--entropy-hot))",
           "very-hot": "hsl(var(--entropy-very-hot))",
         },
-        graph: {
-          bright: "hsl(var(--graph-bright))",
-          mid: "hsl(var(--graph-mid))",
-          deep: "hsl(var(--graph-deep))",
-          glow: "hsl(var(--graph-glow))",
-        },
         chart: {
           background: "hsl(var(--chart-background))",
           grid: "hsl(var(--chart-grid))",
           text: "hsl(var(--chart-text))",
-        },
-        button: {
-          base: "hsl(var(--button-base))",
-          hover: "hsl(var(--button-hover))",
-          active: "hsl(var(--button-active))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -82,13 +71,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'monospace'],
-      },
-      boxShadow: {
-        'qplix': '0 4px 24px rgba(0, 0, 0, 0.4)',
-        'qplix-sm': '0 2px 12px rgba(0, 0, 0, 0.3)',
-        'glow': '0 0 6px rgba(173, 216, 255, 0.6)',
       },
       borderRadius: {
         lg: "var(--radius)",
