@@ -122,10 +122,10 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-background p-6">
-      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr_380px] gap-6 h-[calc(100vh-3rem)]">
-        {/* Left Panel - Controls */}
-        <div className="bg-card rounded-lg shadow-qplix border border-border p-6 overflow-auto">
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      {/* Left Panel - Controls */}
+      <div className="w-80 bg-card border-r border-border overflow-y-auto shadow-qplix-sm">
+        <div className="p-6">
           <ControlsPanel
             currentDateIndex={currentDateIndex}
             maxDateIndex={MONTHLY_DATES.length - 1}
@@ -143,38 +143,38 @@ const Index = () => {
             onShowFedRateChange={setShowFedRate}
           />
         </div>
+      </div>
 
-        {/* Center Panel - Chart */}
-        <div className="bg-card rounded-lg shadow-qplix border border-border overflow-hidden">
-          <EntropyRiver
-            data={stackedData}
-            currentDateIndex={currentDateIndex}
-            onBandClick={handleBandClick}
-            selectedBand={selectedBand}
-            signals={SIGNALS}
-            onSignalClick={handleSignalClick}
-            selectedSignal={selectedSignal?.id || null}
-            showFedRate={showFedRate}
-            fedRates={FED_RATES}
-            entropyThreshold={entropyThreshold}
-          />
-        </div>
+      {/* Center Panel - Chart (Takes remaining space) */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <EntropyRiver
+          data={stackedData}
+          currentDateIndex={currentDateIndex}
+          onBandClick={handleBandClick}
+          selectedBand={selectedBand}
+          signals={SIGNALS}
+          onSignalClick={handleSignalClick}
+          selectedSignal={selectedSignal?.id || null}
+          showFedRate={showFedRate}
+          fedRates={FED_RATES}
+          entropyThreshold={entropyThreshold}
+        />
+      </div>
 
-        {/* Right Panel - Inspector */}
-        <div className="bg-card rounded-lg shadow-qplix border border-border overflow-auto">
-          <InspectorPanel
-            selectedBand={selectedBand}
-            selectedAsset={selectedAsset}
-            selectedSignal={selectedSignal}
-            assets={filteredAssets}
-            currentDate={currentDate}
-            selectedKpi={selectedKpi}
-            onSelectAsset={setSelectedAsset}
-            onClose={handleInspectorClose}
-            monthlyDates={MONTHLY_DATES}
-            assetKpiData={ASSET_KPI_DATA}
-          />
-        </div>
+      {/* Right Panel - Inspector */}
+      <div className="w-96 bg-card border-l border-border overflow-y-auto shadow-qplix-sm">
+        <InspectorPanel
+          selectedBand={selectedBand}
+          selectedAsset={selectedAsset}
+          selectedSignal={selectedSignal}
+          assets={filteredAssets}
+          currentDate={currentDate}
+          selectedKpi={selectedKpi}
+          onSelectAsset={setSelectedAsset}
+          onClose={handleInspectorClose}
+          monthlyDates={MONTHLY_DATES}
+          assetKpiData={ASSET_KPI_DATA}
+        />
       </div>
     </div>
   );

@@ -153,16 +153,23 @@ export function EntropyRiver({
         }
       });
 
-    // Gridlines (QPLIX style)
-    g.append('g')
+    // Gridlines (QPLIX style) - draw before areas so they're behind
+    const gridGroup = g.append('g')
       .attr('class', 'grid')
+      .style('pointer-events', 'none');
+    
+    // Horizontal gridlines
+    gridGroup.append('g')
       .call(d3.axisLeft(yScale)
         .ticks(6)
         .tickSize(-innerWidth)
         .tickFormat(() => '')
       )
-      .attr('stroke', 'rgba(255, 255, 255, 0.06)')
-      .attr('stroke-width', 1);
+      .call(g => g.select('.domain').remove())
+      .call(g => g.selectAll('.tick line')
+        .attr('stroke', 'rgba(255, 255, 255, 0.06)')
+        .attr('stroke-width', 1)
+      );
 
     // Axes with QPLIX colors
     const xAxis = d3.axisBottom(xScale)
@@ -172,7 +179,7 @@ export function EntropyRiver({
     g.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
       .call(xAxis)
-      .attr('color', 'rgba(255, 255, 255, 0.55)')
+      .call(g => g.select('.domain').attr('stroke', 'rgba(255, 255, 255, 0.15)'))
       .selectAll('text')
       .attr('font-family', 'Inter, system-ui, sans-serif')
       .attr('font-size', '12px')
@@ -184,7 +191,8 @@ export function EntropyRiver({
 
     g.append('g')
       .call(yAxis)
-      .attr('color', 'rgba(255, 255, 255, 0.55)')
+      .call(g => g.select('.domain').attr('stroke', 'rgba(255, 255, 255, 0.15)'))
+      .call(g => g.selectAll('.tick line').attr('stroke', 'rgba(255, 255, 255, 0.15)'))
       .selectAll('text')
       .attr('font-family', 'Inter, system-ui, sans-serif')
       .attr('font-size', '12px')
@@ -306,7 +314,7 @@ export function EntropyRiver({
   }, [data, currentDateIndex, selectedBand, signals, selectedSignal, showFedRate, fedRates, onBandClick, onSignalClick, entropyThreshold]);
 
   return (
-    <div ref={containerRef} className="flex-1 bg-card rounded-lg shadow-qplix">
+    <div ref={containerRef} className="w-full h-full bg-background">
       <svg ref={svgRef} className="w-full h-full" />
     </div>
   );
