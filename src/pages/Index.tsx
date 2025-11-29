@@ -26,8 +26,17 @@ const Index = () => {
   // Load client data on mount
   useEffect(() => {
     loadClientData().then(data => {
+      console.log('✅ Portfolio data loaded:', {
+        assetsCount: data.ASSETS.length,
+        datesCount: data.MONTHLY_DATES.length,
+        kpiDataCount: data.ASSET_KPI_DATA.length,
+        firstAsset: data.ASSETS[0],
+        dateRange: `${data.MONTHLY_DATES[0]} to ${data.MONTHLY_DATES[data.MONTHLY_DATES.length - 1]}`
+      });
       setPortfolioData(data);
       setDataLoaded(true);
+    }).catch(err => {
+      console.error('❌ Failed to load portfolio data:', err);
     });
   }, []);
 
@@ -52,8 +61,15 @@ const Index = () => {
 
   // Aggregate data for visualization
   const stackedData = useMemo(() => {
-    return aggregateByEntropyBand(filteredAssets, ASSET_KPI_DATA, selectedKpi);
-  }, [filteredAssets, ASSET_KPI_DATA, selectedKpi]);
+    const data = aggregateByEntropyBand(filteredAssets, ASSET_KPI_DATA, selectedKpi, MONTHLY_DATES);
+    console.log('📊 Stacked data:', {
+      length: data.length,
+      firstDate: data[0]?.date,
+      bands: data[0] ? Object.keys(data[0]).filter(k => k !== 'date') : [],
+      sample: data[0]
+    });
+    return data;
+  }, [filteredAssets, ASSET_KPI_DATA, selectedKpi, MONTHLY_DATES]);
 
   // Play/pause animation
   useEffect(() => {
@@ -144,6 +160,8 @@ const Index = () => {
         selectedKpi={selectedKpi}
         onSelectAsset={setSelectedAsset}
         onClose={handleInspectorClose}
+        monthlyDates={MONTHLY_DATES}
+        assetKpiData={ASSET_KPI_DATA}
       />
     </div>
   );

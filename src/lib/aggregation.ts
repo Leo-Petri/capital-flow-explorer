@@ -1,4 +1,4 @@
-import { Asset, AssetKpiPoint, KpiId, EntropyBandId, MONTHLY_DATES } from '@/data/mockData';
+import { Asset, AssetKpiPoint, KpiId, EntropyBandId } from '@/data/mockData';
 
 export interface BandData {
   band: EntropyBandId;
@@ -21,7 +21,7 @@ export function aggregateByEntropyBand(
   assets: Asset[],
   kpiData: AssetKpiPoint[],
   kpi: KpiId,
-  dates: string[] = MONTHLY_DATES
+  dates: string[]
 ): StackedData[] {
   const result: StackedData[] = [];
   
@@ -64,7 +64,7 @@ export function getAssetKpiSeries(
   assetId: string,
   kpi: KpiId,
   kpiData: AssetKpiPoint[],
-  dates: string[] = MONTHLY_DATES
+  dates: string[]
 ): { date: string; value: number }[] {
   return dates.map(date => {
     const point = kpiData.find(

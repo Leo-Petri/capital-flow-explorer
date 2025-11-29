@@ -1,4 +1,4 @@
-import { Asset, EntropyBandId, Signal, KpiId, ASSET_KPI_DATA } from '@/data/mockData';
+import { Asset, EntropyBandId, Signal, KpiId } from '@/data/mockData';
 import { ENTROPY_BAND_INFO, getBandStats, getAssetsInBand, getAssetKpiSeries } from '@/lib/aggregation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ interface InspectorPanelProps {
   selectedKpi: KpiId;
   onSelectAsset: (asset: Asset | null) => void;
   onClose: () => void;
+  monthlyDates: string[];
+  assetKpiData: any[];
 }
 
 const BAND_COLORS: Record<EntropyBandId, string> = {
@@ -34,6 +36,8 @@ export function InspectorPanel({
   selectedKpi,
   onSelectAsset,
   onClose,
+  monthlyDates,
+  assetKpiData,
 }: InspectorPanelProps) {
   if (!selectedBand && !selectedAsset && !selectedSignal) {
     return (
@@ -94,7 +98,7 @@ export function InspectorPanel({
 
   // Asset Inspector
   if (selectedAsset) {
-    const series = getAssetKpiSeries(selectedAsset.id, selectedKpi, ASSET_KPI_DATA);
+    const series = getAssetKpiSeries(selectedAsset.id, selectedKpi, assetKpiData, monthlyDates);
     const currentValue = series.find(s => s.date === currentDate)?.value || 0;
     const firstValue = series[0]?.value || 0;
     const change = currentValue - firstValue;
@@ -171,7 +175,7 @@ export function InspectorPanel({
   // Band Inspector
   if (selectedBand) {
     const info = ENTROPY_BAND_INFO[selectedBand];
-    const stats = getBandStats(selectedBand, assets, ASSET_KPI_DATA, selectedKpi, currentDate);
+    const stats = getBandStats(selectedBand, assets, assetKpiData, selectedKpi, currentDate);
     const bandAssets = getAssetsInBand(assets, selectedBand);
 
     return (
