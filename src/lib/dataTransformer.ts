@@ -180,6 +180,8 @@ export function transformClientData(rawData: RawAssetData[]): {
   kpiData: AssetKpiPoint[];
   monthlyDates: string[];
 } {
+  console.log('🔄 Starting transformation of', rawData.length, 'raw data entries');
+  
   // Deduplicate by asset name and merge transactions
   const assetMap = new Map<string, {
     volatility: number;
@@ -201,6 +203,8 @@ export function transformClientData(rawData: RawAssetData[]): {
       });
     }
   });
+  
+  console.log('📋 Unique assets after deduplication:', assetMap.size);
   
   // Generate assets with classification
   const assets: Asset[] = [];
