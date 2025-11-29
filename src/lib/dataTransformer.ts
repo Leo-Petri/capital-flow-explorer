@@ -228,16 +228,23 @@ export function transformClientData(rawData: RawAssetData[]): {
   
   // Find date range from all transactions
   let earliestDate = '2019-01-01';
-  let latestDate = '2025-12-31';
+  
+  // Cap latest date to current month
+  const now = new Date();
+  const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  let latestDate = currentYearMonth;
   
   assetMap.forEach(data => {
     data.transactions.forEach(tx => {
       if (tx.buy_date < earliestDate) earliestDate = tx.buy_date;
-      if (tx.sell_date > latestDate) latestDate = tx.sell_date;
+      // Only consider sell dates up to today
+      if (tx.sell_date > latestDate && tx.sell_date <= currentYearMonth) {
+        latestDate = tx.sell_date;
+      }
     });
   });
   
-  // Generate monthly dates
+  // Generate monthly dates (up to current month)
   const monthlyDates = generateMonthlyDates(earliestDate, latestDate);
   
   // Generate KPI data
