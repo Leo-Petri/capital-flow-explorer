@@ -1,0 +1,2 @@
+typescript_react = https://dev.to/minompi/add-images-to-a-react-project-with-typescript-4gbm (30/11/2025)
+python = https://www.python.org/ (30/11/2025)

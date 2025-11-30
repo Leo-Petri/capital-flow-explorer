@@ -23,6 +23,11 @@ Open your browser and explore your capital flows.
 
 Built with modern tools for speed and reliability. React and TypeScript ensure the app runs smoothly even with large datasets. Custom data processing scripts handle portfolio data, news analysis, and API connections. The code is organized for easy maintenance and future updates.
 
+| Frontend                                     | Data Processing & AI                                  | Deployment                |
+|-----------------------------------------------|-------------------------------------------------------|---------------------------|
+| ![](logos_readme/ts_react.png)                  | ![](logos_readme/python.png) <br/> ![](logos_readme/hflogo.png) | ![](logos_readme/vercel.png) |
+
+
 ## 3. Visualization & Communication
 
 **The River Chart** - Watch money flow across risk bands like a river over time. Interactive controls let you play through history, filter by asset type, and select different metrics.
