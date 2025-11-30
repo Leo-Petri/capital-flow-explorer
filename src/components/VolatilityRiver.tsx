@@ -15,7 +15,7 @@ interface VolatilityRiverProps {
   fedRates: RatePoint[];
 }
 
-// Institutional quant-grade muted luminous palette
+// Institutional quant-grade muted luminous palette - 5 finer bands with smooth gradient
 const BAND_COLORS: Record<VolatilityBandId, { base: string; light: string; dark: string; glow: string; defaultOpacity: number }> = {
   cold: { base: '#2D5A87', light: '#3D6B9A', dark: '#1E3A5F', glow: 'rgba(45,90,135,0.4)', defaultOpacity: 0.28 },        // Deep navy → soft teal
   mild: { base: '#475569', light: '#5A6A7F', dark: '#334155', glow: 'rgba(71,85,105,0.4)', defaultOpacity: 0.30 },        // Slate → steel blue

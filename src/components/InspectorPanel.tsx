@@ -432,24 +432,12 @@ export function InspectorPanel({
           <CardContent className="space-y-3">
             {selectedAsset.rawVolatility !== undefined && selectedAsset.rawVolatility !== null && (
               <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">Volatility (Raw)</span>
+                <span className="text-xs text-muted-foreground">Volatility</span>
                 <span className="text-sm font-mono font-semibold">
                   {selectedAsset.rawVolatility.toFixed(4)}
                 </span>
               </div>
             )}
-            <div className="flex justify-between items-center border-t border-[rgba(255,255,255,0.05)] pt-2">
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">Volatility Score</span>
-                <span className="text-xs text-muted-foreground/70 mt-0.5">
-                  (vs. {selectedAsset.categoryPath.length > 1 ? selectedAsset.categoryPath[1] : selectedAsset.categoryPath[0]})
-                </span>
-              </div>
-              <div className="flex flex-col items-end">
-                <span className="text-lg font-mono font-bold">{selectedAsset.volatilityScore.toFixed(1)}</span>
-                <span className="text-xs text-muted-foreground/70">/ 100</span>
-              </div>
-            </div>
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">Band</span>
               <span className="text-sm">{VOLATILITY_BAND_INFO[selectedAsset.volatilityBand].range}</span>
@@ -582,7 +570,7 @@ export function InspectorPanel({
                 <CardContent className="pt-4 pb-4">
                   <div className="text-xs text-muted-foreground mb-1">Avg Volatility</div>
                   <div className="text-lg font-bold font-mono">
-                    {stats.avgVolatility.toFixed(1)}
+                    {stats.avgVolatility.toFixed(4)}
                   </div>
                 </CardContent>
               </Card>

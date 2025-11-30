@@ -5,7 +5,6 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { KpiId } from '@/data/mockData';
-import oscillaLogo from '@/assets/oscilla-logo.png';
 
 function formatDate(dateStr: string): string {
   // Handle both YYYY-MM-DD and YYYY-MM formats
@@ -70,15 +69,6 @@ export function ControlsPanel({
 }: ControlsPanelProps) {
   return (
     <div className="h-full bg-[#0D1117] rounded-none p-6 space-y-8 overflow-y-auto border border-[#1F2937] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
-      {/* Logo and Branding */}
-      <div className="flex flex-col items-start pb-2">
-        <img 
-          src={oscillaLogo} 
-          alt="Oscilla" 
-          className="h-11 w-auto object-contain opacity-90"
-        />
-      </div>
-
       {/* Timeline */}
       <div className="space-y-4">
         <div>

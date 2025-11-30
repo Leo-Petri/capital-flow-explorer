@@ -6,7 +6,6 @@ export interface Asset {
   categoryPath: string[];
   isLiquid: boolean;
   volatilityBand: VolatilityBandId;
-  volatilityScore: number;
   // Additional raw data from full_asset_analysis.json
   rawVolatility?: number; // Original volatility value from JSON
   interestRate?: number | string; // Interest rate if applicable
