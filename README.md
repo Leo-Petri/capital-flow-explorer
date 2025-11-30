@@ -1,73 +1,38 @@
-# Welcome to your Lovable project
+# Capital Flow Explorer
 
-## Project info
+See how your money moves. Capital Flow Explorer shows where your portfolio's money flows across different risk levels over time. Connect the dots between market news, interest rates, and your investments in one clear view.
 
-**URL**: https://lovable.dev/projects/f617cc21-2045-4d53-a439-a9573505aa18
+## 1. Insight Discovery
 
-## How can I edit this code?
+**See patterns others miss.** Watch how your portfolio shifts between safe and risky investments as markets change. Assets are grouped into five risk bands (from safe to very risky), revealing how money moves across risk levels over time.
 
-There are several ways of editing your application.
+**Connect events to outcomes.** News signals appear on the timeline, showing when market events happened. See how Fed rate changes, news sentiment, and market conditions line up with portfolio movements.
 
-**Use Lovable**
+**Understand the why.** Drill into any risk band to see which assets drove performance, when you bought or sold them, and how they contributed to overall returns.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f617cc21-2045-4d53-a439-a9573505aa18) and start prompting.
+## 2. Technical Execution
 
-Changes made via Lovable will be committed automatically to this repo.
+Built with modern tools for speed and reliability. React and TypeScript ensure the app runs smoothly even with large datasets. Custom data processing scripts handle portfolio data, news analysis, and API connections. The code is organized for easy maintenance and future updates.
 
-**Use your preferred IDE**
+## 3. Visualization & Communication
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+**The River Chart** - Watch money flow across risk bands like a river over time. Interactive controls let you play through history, filter by asset type, and select different metrics.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**News Overlay** - Financial news appears as colored dots on the timeline. Green for good news, red for bad, gray for neutral. Click any dot to read the full story.
 
-Follow these steps:
+**Fed Rates** - Toggle interest rates on the chart to spot connections between policy changes and your investments.
+
+**Inspector Panel** - Click any risk band to see individual assets, their performance, and transaction history.
+
+## 4. Data Integration
+
+Pulls data from multiple sources and brings it together. Portfolio data comes from Qplix API. Financial news is fetched and analyzed for sentiment. Fed rate data is integrated to show policy context. Everything flows into one unified view.
+
+## Quick Start
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/f617cc21-2045-4d53-a439-a9573505aa18) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Open your browser and explore your capital flows.
