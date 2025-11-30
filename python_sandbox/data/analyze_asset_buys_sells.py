@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 # Input and output files
-SECURITY_FILE = Path("data/security_691dd48d3022610895c102ea.json")
-OUTPUT_FILE = Path("data/asset_buy_sell_dates.json")
+SECURITY_FILE = Path("python_sandbox/data/data/security_691dd48d3022610895c102ea.json")
+OUTPUT_FILE = Path("python_sandbox/data/data/asset_buy_sell_dates.json")
 REFERENCE_END_DATE = datetime(2025, 11, 29)
 
 

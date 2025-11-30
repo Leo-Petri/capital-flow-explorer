@@ -16,7 +16,7 @@ NEW_PRESET_ID = "692b51eb7b0feeedced7dd5a"  # For volatility, interest rate, pur
 LEGAL_ENTITY_ID = "5cb71a8b2c94de98b02aff19"
 
 # Files
-DATA_DIR = Path("data")
+DATA_DIR = Path("python_sandbox/data")
 BUY_SELL_FILE = DATA_DIR / "asset_buy_sell_dates.json"
 OUTPUT_FILE = DATA_DIR / "full_asset_analysis.json"
 REFERENCE_END_DATE = datetime(2025, 11, 29)
@@ -29,23 +29,30 @@ def parse_timestamp(ts: str) -> datetime:
 
 
 def find_timestamp_key(date_str: str, time_series: Dict[str, float]) -> Optional[str]:
-    """Find the timestamp key in time series that matches the given date"""
+    """Find the timestamp key in time series: Exact match or last known value (closest past date)"""
     target_date = datetime.strptime(date_str, "%Y-%m-%d")
+    sorted_keys = sorted(time_series.keys())
     
-    # Try exact match first
-    for ts_key in time_series.keys():
+    best_match = None
+    
+    for ts_key in sorted_keys:
         ts_date = parse_timestamp(ts_key)
+        
+        # If we found an exact match, return it
         if ts_date.date() == target_date.date():
             return ts_key
-    
-    # If no exact match, find the closest one (same day or next day)
-    for ts_key in sorted(time_series.keys()):
-        ts_date = parse_timestamp(ts_key)
-        if ts_date.date() >= target_date.date():
-            return ts_key
-    
-    # If still no match, return the last one
-    return sorted(time_series.keys())[-1] if time_series else None
+        
+        # If the current key is before the target, store it as a candidate
+        if ts_date.date() < target_date.date():
+            best_match = ts_key
+        
+        # If we passed the target date, stop looking
+        if ts_date.date() > target_date.date():
+            break
+            
+    # Return the best match found (closest past date)
+    # If no past date exists (target is before all timestamps), return None
+    return best_match
 
 
 def get_cell_value(cell: Any) -> Any:
@@ -219,23 +226,17 @@ def calculate_profit_and_prices(asset_name: str, transactions: List[Dict],
             # Calculate profit using NAV
             profit = sell_nav - buy_nav if sell_nav is not None and buy_nav is not None else 0.0
             total_profit += profit
-            
-            # Determine purchase price: use provided purchase_price if it's reasonable (similar magnitude to NAV),
-            # otherwise use NAV as purchase price
-            if purchase_price is not None and buy_nav != 0:
-                # Check if purchase_price is in similar magnitude to NAV (within 3 orders of magnitude)
-                ratio = abs(purchase_price / buy_nav) if buy_nav != 0 else 0
-                if 0.001 <= ratio <= 1000:
-                    actual_purchase_price = purchase_price
-                else:
-                    # Purchase price seems to be per-share or different metric, use NAV
-                    actual_purchase_price = buy_nav
+
+            # Determine purchase price: prefer preset value, fallback to buy NAV
+            # Fix: Treat 0.0 as None so we calculate based on NAV
+            if purchase_price is not None and purchase_price > 0:
+                actual_purchase_price = purchase_price
             else:
-                actual_purchase_price = buy_nav if buy_nav != 0 else (purchase_price if purchase_price is not None else 0.0)
-            
-            # Calculate selling price: purchase_price + profit
+                actual_purchase_price = buy_nav
+
+            # Calculate selling price
             selling_price = actual_purchase_price + profit
-            
+
             transactions_detail.append({
                 "buy_date": buy_date,
                 "sell_date": sell_date,
@@ -245,6 +246,9 @@ def calculate_profit_and_prices(asset_name: str, transactions: List[Dict],
                 "sell_nav": sell_nav,
                 "profit": profit
             })
+            
+            # --- REMOVED DUPLICATE BLOCK HERE ---
+            
         else:
             i += 1
     
@@ -441,4 +445,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
