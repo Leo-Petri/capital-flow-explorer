@@ -125,6 +125,22 @@ export function VolatilityRiver({
     const feMerge = filter.append('feMerge');
     feMerge.append('feMergeNode').attr('in', 'coloredBlur');
     feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+    // Stronger glow filter specifically for timeline
+    const timelineGlowFilter = defs.append('filter')
+      .attr('id', 'timeline-glow')
+      .attr('x', '-100%')
+      .attr('y', '-100%')
+      .attr('width', '300%')
+      .attr('height', '300%');
+    
+    timelineGlowFilter.append('feGaussianBlur')
+      .attr('stdDeviation', '4')
+      .attr('result', 'coloredBlur');
+    
+    const timelineMerge = timelineGlowFilter.append('feMerge');
+    timelineMerge.append('feMergeNode').attr('in', 'coloredBlur');
+    timelineMerge.append('feMergeNode').attr('in', 'SourceGraphic');
     
     BAND_ORDER.forEach((band) => {
       const colors = BAND_COLORS[band];
@@ -320,48 +336,6 @@ export function VolatilityRiver({
       });
     }
 
-    // Timeline line group - RENDERED AFTER BANDS to be on top
-    const currentDate = dates[currentDateIndex] || dates[0];
-    const cursorX = xScale(currentDate);
-    
-    const timelineGroup = g.append('g')
-      .attr('class', 'timeline-group')
-      .style('pointer-events', 'none');  // Don't interfere with interactions
-    
-    // Main vertical timeline line - dashed with soft halo glow
-    timelineGroup.append('line')
-      .attr('class', 'current-date-cursor')
-      .attr('x1', cursorX)
-      .attr('x2', cursorX)
-      .attr('y1', 0)
-      .attr('y2', innerHeight)
-      .attr('stroke', 'rgba(255, 255, 255, 0.85)')
-      .attr('stroke-width', 1.5)
-      .attr('stroke-dasharray', '5,5')
-      .attr('opacity', 1)
-      .attr('filter', 'url(#glow)');
-
-    // Triangle markers at top and bottom
-    const triangleSize = 6;
-    
-    // Top triangle (pointing down/inward)
-    timelineGroup.append('polygon')
-      .attr('class', 'cursor-marker-top')
-      .attr('points', `${cursorX},${triangleSize} ${cursorX - triangleSize},0 ${cursorX + triangleSize},0`)
-      .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('stroke', 'rgba(255, 255, 255, 0.7)')
-      .attr('stroke-width', 0.5)
-      .attr('opacity', 1);
-    
-    // Bottom triangle (pointing up/inward)
-    timelineGroup.append('polygon')
-      .attr('class', 'cursor-marker-bottom')
-      .attr('points', `${cursorX},${innerHeight - triangleSize} ${cursorX - triangleSize},${innerHeight} ${cursorX + triangleSize},${innerHeight}`)
-      .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('stroke', 'rgba(255, 255, 255, 0.7)')
-      .attr('stroke-width', 0.5)
-      .attr('opacity', 1);
-
     // Fed Funds Rate - pre-compute valid rate points for use in zoom handler
     let validRatePoints: (RatePoint & { date: Date; dateIndex: number })[] = [];
     if (showFedRate && fedRates.length > 0) {
@@ -509,6 +483,47 @@ export function VolatilityRiver({
           .attr('filter', 'url(#glow)')
           .style('cursor', 'pointer');
       });
+
+    // === TIMELINE LINE - RENDERED LAST TO BE ON TOP ===
+    // Position variables needed for both initial render and zoom updates
+    const currentDate = dates[currentDateIndex] || dates[0];
+    const cursorX = xScale(currentDate);
+    const triangleSize = 6;
+    
+    const timelineGroup = g.append('g')
+      .attr('class', 'timeline-group')
+      .style('pointer-events', 'none');  // Don't interfere with interactions
+    
+    // Main vertical timeline line - dashed with strong halo glow
+    timelineGroup.append('line')
+      .attr('class', 'current-date-cursor')
+      .attr('x1', cursorX)
+      .attr('x2', cursorX)
+      .attr('y1', 0)
+      .attr('y2', innerHeight)
+      .attr('stroke', 'rgba(255, 255, 255, 0.9)')
+      .attr('stroke-width', 1.5)
+      .attr('stroke-dasharray', '5,5')
+      .attr('opacity', 1)
+      .attr('filter', 'url(#timeline-glow)');
+
+    // Top triangle (pointing down/inward)
+    timelineGroup.append('polygon')
+      .attr('class', 'cursor-marker-top')
+      .attr('points', `${cursorX},${triangleSize} ${cursorX - triangleSize},0 ${cursorX + triangleSize},0`)
+      .attr('fill', 'rgba(255, 255, 255, 0.95)')
+      .attr('stroke', 'rgba(255, 255, 255, 0.8)')
+      .attr('stroke-width', 0.5)
+      .attr('opacity', 1);
+    
+    // Bottom triangle (pointing up/inward)
+    timelineGroup.append('polygon')
+      .attr('class', 'cursor-marker-bottom')
+      .attr('points', `${cursorX},${innerHeight - triangleSize} ${cursorX - triangleSize},${innerHeight} ${cursorX + triangleSize},${innerHeight}`)
+      .attr('fill', 'rgba(255, 255, 255, 0.95)')
+      .attr('stroke', 'rgba(255, 255, 255, 0.8)')
+      .attr('stroke-width', 0.5)
+      .attr('opacity', 1);
 
     // Zoom behavior with constraints
     const zoom = d3.zoom<SVGSVGElement, unknown>()
