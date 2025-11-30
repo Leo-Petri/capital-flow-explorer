@@ -4,7 +4,7 @@ from pathlib import Path
 # Input files
 FULL_ANALYSIS_FILE = Path("python_sandbox/data/full_asset_analysis.json")
 NEW_VOLATILITY_FILE = Path("python_sandbox/data/data/asset_volatility.json")
-OUTPUT_FILE = Path("python_sandbox/data/full_asset_analysis_with_new_volatility.json")
+OUTPUT_FILE = Path("python_sandbox/data/full_asset_analysis.json")
 
 def main():
     print(f"Loading full analysis from {FULL_ANALYSIS_FILE}...")
