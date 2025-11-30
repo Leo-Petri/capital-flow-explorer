@@ -4,15 +4,7 @@ See how your money moves. Capital Flow Explorer shows where your portfolio's mon
 
 ## 0. Quick start
 
-First, run the Python data preparation scripts:
-
-```sh
-python python_sandbox/data/access.py
-python python_sandbox/data/analyze_asset_buys_sells.py
-python python_sandbox/data/comprehensive_asset_analysis.py
-```
-
-Then install and start the frontend:
+First, install and start the frontend app:
 
 ```sh
 npm install
@@ -20,6 +12,28 @@ npm run dev
 ```
 
 Open your browser and explore your capital flows.
+
+---
+
+For working with the data pipeline (Python sandbox):
+
+1. (Recommended) Create a virtual environment and install all dependencies:
+
+   ```sh
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   pip install -r python_sandbox/requirements.txt
+   ```
+
+2. Run the Python data preparation scripts:
+
+   ```sh
+   python python_sandbox/data/access.py
+   python python_sandbox/data/analyze_asset_buys_sells.py
+   python python_sandbox/data/comprehensive_asset_analysis.py
+   ```
+
+The Python scripts are provided in a sandbox folder so you can easily explore and modify/extend the data pipeline as you wish.
 
 ## 1. Insight Discovery
 
@@ -67,18 +81,12 @@ A detailed breakdown of these data sources follows below:
 
 ### 4.1 Data Sources
 
-| Data Category                                 | Source                                                                                                                                | Raw File(s)                                                       | Key Attributes                                                                    |
-|-----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|-----------------------------------------------------------------------------------|
-| **Portfolio, Transactions & Interest Rates**  | <img src="logos_readme/qplix.png" alt="Qplix API" height="24"/><br/>[Qplix API](https://qplix.com)                                   | (via API access)                                                  | TimeSeries: nav, twr, irr, interest rate, ...  |
-| **Financial News** (Geopolitics, Indices)     | <img src="logos_readme/newsapi.png" alt="NewsAPI.org" height="24"/> [NewsAPI.org](https://newsapi.org)                               | `input_*.csv`, `output_*.csv`                                      | timestamp,new,source,link
-| **US (Trump) Tariff Timeline**                | <img src="logos_readme/jdsupra.png" alt="JD Supra" height="24"/> [JD Supra](https://www.jdsupra.com/legalnews/trump-tariff-tracker-october-31-9019759/) | `output_trump_tariffs.csv`                                         | tarif_new ,implemented_date      |
-| **(Some) Market Data (on famous Assets)**     | <img src="logos_readme/yfinance.png" alt="Yahoo Finance" height="36"/><br/>[Yahoo Finance](https://finance.yahoo.com/)              | `fed_rates_2023_2025.csv`, `yfinance_raw_daily.csv`, `indices_ohlc_2023_2025.csv` | timestamp(datetime),new(string),link (string) |
-| Data Category                                | Source                                                                                                                                                  | Raw File(s)                                                                       | Key Attributes                                                                          |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| **Portfolio, Transactions & Interest Rates** | <img src="logos_readme/qplix.png" alt="Qplix API" height="24"/><br/>[Qplix API](https://qplix.com)                                                      | (via API access)                                                                  | Date, Asset, Transaction (Buy/Sell), Amount, Currency, Legal Entity, Interest Rate      |
-| **Financial News** (Geopolitics, Indices)    | <img src="logos_readme/newsapi.png" alt="NewsAPI.org" height="24"/> [NewsAPI.org](https://newsapi.org)                                                  | `input_*.csv`, `output_*.csv`                                                     | Date, Title, Source, Text, Ticker/Topic                                                 |
-| **US (Trump) Tariff Timeline**               | <img src="logos_readme/jdsupra.png" alt="JD Supra" height="24"/> [JD Supra](https://www.jdsupra.com/legalnews/trump-tariff-tracker-october-31-9019759/) | `output_trump_tariffs.csv`                                                        | Date, Event Description, Sentiment, Topic, Importance                                   |
-| **(Some) Market Data (on famous Assets)**    | <img src="logos_readme/yfinance.png" alt="Yahoo Finance" height="36"/><br/>[Yahoo Finance](https://finance.yahoo.com/)                                  | `fed_rates_2023_2025.csv`, `yfinance_raw_daily.csv`, `indices_ohlc_2023_2025.csv` | Date, Rate, Event, Description, Symbol, Open, Close, Volume, Index Name, Sector, Region |
+| Data Category                                 | Source                                                                                                                                | Raw File(s)                                                       | Key Attributes & Datatypes                                                                                                                                         |
+|-----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Portfolio, Transactions & Interest Rates**  | <img src="logos_readme/qplix.png" alt="Qplix API" height="24"/><br/>[Qplix API](https://qplix.com)                                   | (via API access)                                                  | **TimeSeries:**<br/>- `date` (`datetime`)<br/>- `nav`, `twr`, `irr`, `interest_rate`, ... (float)                                   |
+| **Financial News**<br/>(Geopolitics, Indices) | <img src="logos_readme/newsapi.png" alt="NewsAPI.org" height="24"/> [NewsAPI.org](https://newsapi.org)                               | `input_*.csv`, `output_*.csv`                                      | - `timestamp` (`datetime`)<br/>- `new` (`string`)<br/>- `source` (`string`)<br/>- `link` (`string`)        |
+| **US (Trump) Tariff Timeline**                | <img src="logos_readme/jdsupra.png" alt="JD Supra" height="24"/> [JD Supra](https://www.jdsupra.com/legalnews/trump-tariff-tracker-october-31-9019759/) | `output_trump_tariffs.csv`                                         | - `implemented_date` (`date`)<br/>- `event_description` (`string`)<br/>|
+| **(Some) Market Data<br/>(on famous Assets)** | <img src="logos_readme/yfinance.png" alt="Yahoo Finance" height="36"/><br/>[Yahoo Finance](https://finance.yahoo.com/)              | `fed_rates_2023_2025.csv`,<br/>`yfinance_raw_daily.csv`,<br/>`indices_ohlc_2023_2025.csv` | - `timestamp` (`datetime`)<br/>- `new` (`string`)<br/>- `link` (`string`)                                |
 
 ### 4.2 Data Enrichment with Hugging Face <img src="logos_readme/hflogo.png" alt="Hugging Face" height="32"/>
 
