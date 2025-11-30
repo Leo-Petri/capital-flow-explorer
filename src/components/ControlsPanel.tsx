@@ -71,15 +71,12 @@ export function ControlsPanel({
   return (
     <div className="h-full bg-[#0D1117] rounded-none p-6 space-y-8 overflow-y-auto border border-[#1F2937] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
       {/* Logo and Branding */}
-      <div className="flex flex-col items-center text-center space-y-2 pb-2">
+      <div className="flex flex-col items-start pb-2">
         <img 
           src={oscillaLogo} 
           alt="Oscilla" 
-          className="h-8 w-auto object-contain opacity-90"
+          className="h-11 w-auto object-contain opacity-90"
         />
-        <p className="text-xs text-[#9CA3AF] font-normal tracking-wide uppercase" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
-          Dynamic Wealth Complexity Mapping
-        </p>
       </div>
 
       {/* Timeline */}

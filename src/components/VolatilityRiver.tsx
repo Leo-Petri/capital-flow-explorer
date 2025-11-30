@@ -16,12 +16,12 @@ interface VolatilityRiverProps {
 }
 
 // Institutional quant-grade muted luminous palette
-const BAND_COLORS: Record<VolatilityBandId, { base: string; light: string; dark: string; glow: string }> = {
-  cold: { base: '#2D5A87', light: '#3D6B9A', dark: '#1E3A5F', glow: 'rgba(45,90,135,0.4)' },        // Deep navy → soft teal
-  mild: { base: '#475569', light: '#5A6A7F', dark: '#334155', glow: 'rgba(71,85,105,0.4)' },        // Slate → steel blue
-  warm: { base: '#D97706', light: '#F59E0B', dark: '#B45309', glow: 'rgba(217,119,6,0.4)' },       // Amber → muted gold
-  hot: { base: '#EA580C', light: '#FB923C', dark: '#C2410C', glow: 'rgba(234,88,12,0.4)' },        // Orange-red
-  very_hot: { base: '#991B1B', light: '#B91C1C', dark: '#7F1D1D', glow: 'rgba(153,27,27,0.4)' },   // Plum → crimson
+const BAND_COLORS: Record<VolatilityBandId, { base: string; light: string; dark: string; glow: string; defaultOpacity: number }> = {
+  cold: { base: '#2D5A87', light: '#3D6B9A', dark: '#1E3A5F', glow: 'rgba(45,90,135,0.4)', defaultOpacity: 0.28 },        // Deep navy → soft teal
+  mild: { base: '#475569', light: '#5A6A7F', dark: '#334155', glow: 'rgba(71,85,105,0.4)', defaultOpacity: 0.30 },        // Slate → steel blue
+  warm: { base: '#D97706', light: '#F59E0B', dark: '#B45309', glow: 'rgba(217,119,6,0.4)', defaultOpacity: 0.32 },       // Amber → muted gold
+  hot: { base: '#EA580C', light: '#FB923C', dark: '#C2410C', glow: 'rgba(234,88,12,0.4)', defaultOpacity: 0.30 },        // Orange-red
+  very_hot: { base: '#991B1B', light: '#B91C1C', dark: '#7F1D1D', glow: 'rgba(153,27,27,0.4)', defaultOpacity: 0.28 },   // Plum → crimson
 };
 
 const BAND_ORDER: VolatilityBandId[] = ['cold', 'mild', 'warm', 'hot', 'very_hot'];
@@ -134,23 +134,23 @@ export function VolatilityRiver({
         .attr('x2', '100%')
         .attr('y2', '0%');
       
-      // Left: darker
+      // Left: darker, more transparent
       gradient.append('stop')
         .attr('offset', '0%')
         .attr('stop-color', colors.dark)
-        .attr('stop-opacity', 0.5);
+        .attr('stop-opacity', 0.25);
       
       // Middle: base color
       gradient.append('stop')
         .attr('offset', '50%')
         .attr('stop-color', colors.base)
-        .attr('stop-opacity', 0.6);
+        .attr('stop-opacity', 0.35);
       
-      // Right: lighter luminous edge
+      // Right: lighter luminous edge, fading to transparent
       gradient.append('stop')
         .attr('offset', '100%')
         .attr('stop-color', colors.light)
-        .attr('stop-opacity', 0.45);
+        .attr('stop-opacity', 0.15);
     });
 
     // Stack generator
@@ -179,16 +179,21 @@ export function VolatilityRiver({
       .join('path')
       .attr('fill', d => `url(#gradient-${d.key})`)
       .attr('d', area)
-      .attr('opacity', d => selectedBand === null || selectedBand === d.key ? 1 : 0.25)
+      .attr('opacity', d => {
+        if (selectedBand === null) {
+          return BAND_COLORS[d.key as VolatilityBandId].defaultOpacity;
+        }
+        return selectedBand === d.key ? 1 : 0.15;
+      })
       .attr('stroke', d => {
         if (selectedBand === d.key) return '#ffffff';
-        return BAND_COLORS[d.key as VolatilityBandId].light;
+        return BAND_COLORS[d.key as VolatilityBandId].base;
       })
-      .attr('stroke-width', d => selectedBand === d.key ? 1.5 : 1)  // Thin neon edges
-      .attr('stroke-opacity', d => selectedBand === d.key ? 0.9 : 0.6)
+      .attr('stroke-width', d => selectedBand === d.key ? 1.5 : 0.6)  // Thinner borders for unselected
+      .attr('stroke-opacity', d => selectedBand === d.key ? 0.9 : 0.3)  // Lower opacity for unselected
       .attr('stroke-linejoin', 'round')
       .attr('stroke-linecap', 'round')
-      .attr('filter', 'url(#glow)')  // Soft outer glow
+      .attr('filter', d => selectedBand === d.key ? 'url(#glow)' : 'none')  // Glow only on selected
       .style('cursor', 'pointer')
       .style('transition', 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)')
       .on('click', (event, d) => {
@@ -198,17 +203,20 @@ export function VolatilityRiver({
       .on('mouseenter', function(event, d) {
         if (selectedBand === null) {
           d3.select(this)
-            .attr('opacity', 1)
-            .attr('stroke-width', 1.5)
-            .attr('stroke-opacity', 0.9);
+            .attr('opacity', 0.6)
+            .attr('stroke-width', 1.2)
+            .attr('stroke-opacity', 0.7)
+            .attr('filter', 'url(#glow)');
         }
       })
       .on('mouseleave', function(event, d) {
         if (selectedBand === null || selectedBand !== d.key) {
+          const defaultOpacity = BAND_COLORS[d.key as VolatilityBandId].defaultOpacity;
           d3.select(this)
-            .attr('opacity', selectedBand === null ? 1 : 0.25)
-            .attr('stroke-width', selectedBand === null ? 1 : 1)
-            .attr('stroke-opacity', selectedBand === null ? 0.6 : 0.6);
+            .attr('opacity', selectedBand === null ? defaultOpacity : 0.15)
+            .attr('stroke-width', selectedBand === null ? 0.6 : 0.6)
+            .attr('stroke-opacity', selectedBand === null ? 0.3 : 0.3)
+            .attr('filter', selectedBand === d.key ? 'url(#glow)' : 'none');
         }
       });
 
