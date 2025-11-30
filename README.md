@@ -19,6 +19,8 @@ Open your browser and explore your capital flows.
 
 **Understand the why.** Drill into any risk band to see which assets drove performance, when you bought or sold them, and how they contributed to overall returns.
 
+---
+
 ## 2. Technical Execution
 
 Built with **React** and **TypeScript** for a fast, responsive experience—even with lots of data. We stand out by going beyond standard dashboards: a **Python-based structure** that collects, manipulates, and analyzes all portfolio and news data, using **real NLP models** (from Hugging Face) to classify news by sentiment, importance, and topic. Our python scripts connect to APIs, scrappes websites, and make very simple insights. Everything is set up so you can tweak, extend, or swap data sources without headaches—future-proof by design. Most importantly everything built with **open-source** tools.
@@ -27,7 +29,7 @@ Built with **React** and **TypeScript** for a fast, responsive experience—even
 |:---:|:---:|:---:|
 | <img src="logos_readme/ts_react.png" alt="TypeScript React" style="width:68px; height:68px; object-fit:contain; margin:4px 0;"/> | <img src="logos_readme/python.png" alt="Python" style="width:68px; height:68px; object-fit:contain; margin-bottom:4px;"/><br/><img src="logos_readme/hflogo.png" alt="Hugging Face" style="width:68px; height:68px; object-fit:contain;"/> | <img src="logos_readme/vercel.png" alt="Vercel" style="width:68px; height:68px; object-fit:contain; margin:4px 0;"/> |
 
-
+---
 
 ## 3. Visualization & Communication
 
@@ -38,6 +40,8 @@ Built with **React** and **TypeScript** for a fast, responsive experience—even
 **Fed Rates** - Toggle interest rates on the chart to spot connections between policy changes and your investments.
 
 **Inspector Panel** - Click any risk band to see individual assets, their performance, and transaction history.
+
+---
 
 ## 4. Data Integration
 
