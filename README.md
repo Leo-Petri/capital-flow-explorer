@@ -23,36 +23,9 @@ Open your browser and explore your capital flows.
 
 Built with **React** and **TypeScript** for a fast, responsive experience—even with lots of data. We stand out by going beyond standard dashboards: a **Python-based structure** that collects, manipulates, and analyzes all portfolio and news data, using **real NLP models** (from Hugging Face) to classify news by sentiment, importance, and topic. Our python scripts connect to APIs, scrappes websites, and make very simple insights. Everything is set up so you can tweak, extend, or swap data sources without headaches—future-proof by design. Most importantly everything built with **open-source** tools.
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align:center">
-        <div>Frontend<br/><span style="font-size:13px; font-weight:normal; color:#888;">(UI/UX)</span></div>
-      </th>
-      <th style="text-align:center">
-        <div>Data Processing &amp; AI<br/><span style="font-size:13px; font-weight:normal; color:#888;">(Automation &amp; Analytics)</span></div>
-      </th>
-      <th style="text-align:center">
-        <div>Deployment<br/><span style="font-size:13px; font-weight:normal; color:#888;">(Cloud Hosting)</span></div>
-      </th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center">
-        <img src="logos_readme/ts_react.png" alt="TypeScript React" width="68" height="68"/>
-      </td>
-      <td align="center">
-        <img src="logos_readme/python.png" alt="Python" width="68" height="68" style="margin-bottom:4px"/>
-        <br/>
-        <img src="logos_readme/hflogo.png" alt="Hugging Face" width="68" height="68"/>
-      </td>
-      <td align="center">
-        <img src="logos_readme/vercel.png" alt="Vercel" width="68" height="68"/>
-      </td>
-    </tr>
-  </tbody>
-</table>
+| <div style="text-align:center">Frontend<br/><span style="font-size:13px; font-weight:normal; color:#888;">(UI/UX)</span></div> | <div style="text-align:center">Data Processing &amp; AI<br/><span style="font-size:13px; font-weight:normal; color:#888;">(Automation &amp; Analytics)</span></div> | <div style="text-align:center">Deployment<br/><span style="font-size:13px; font-weight:normal; color:#888;">(Cloud Hosting)</span></div> |
+|:---:|:---:|:---:|
+| <img src="logos_readme/ts_react.png" alt="TypeScript React" style="width:68px; height:68px; object-fit:contain; margin:4px 0;"/> | <img src="logos_readme/python.png" alt="Python" style="width:68px; height:68px; object-fit:contain; margin-bottom:4px;"/><br/><img src="logos_readme/hflogo.png" alt="Hugging Face" style="width:68px; height:68px; object-fit:contain;"/> | <img src="logos_readme/vercel.png" alt="Vercel" style="width:68px; height:68px; object-fit:contain; margin:4px 0;"/> |
 
 
 
@@ -77,12 +50,12 @@ A detailed breakdown of these data sources follows below:
 
 ### 4.1 Data Sources
 
-| Data Category                                 | Source                                                                                                                      | Raw File(s)                                                       | Key Attributes                                                                    |
-|-----------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|-----------------------------------------------------------------------------------|
-| **Portfolio, Transactions & Interest Rates**  | <img src="logos_readme/qplix.png" alt="Qplix API" height="24"/> [Qplix API](https://qplix.com)                             | (via API access)                                                  | Date, Asset, Transaction (Buy/Sell), Amount, Currency, Legal Entity, Interest Rate |
-| **Financial News** (Geopolitics, Indices)     | <img src="logos_readme/newsapi.png" alt="NewsAPI.org" height="24"/> [NewsAPI.org](https://newsapi.org)                     | `input_*.csv`, `output_*.csv`                                      | Date, Title, Source, Text, Ticker/Topic                                           |
+| Data Category                                 | Source                                                                                                                                | Raw File(s)                                                       | Key Attributes                                                                    |
+|-----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| **Portfolio, Transactions & Interest Rates**  | <img src="logos_readme/qplix.png" alt="Qplix API" height="24"/><br/>[Qplix API](https://qplix.com)                                   | (via API access)                                                  | Date, Asset, Transaction (Buy/Sell), Amount, Currency, Legal Entity, Interest Rate |
+| **Financial News** (Geopolitics, Indices)     | <img src="logos_readme/newsapi.png" alt="NewsAPI.org" height="24"/> [NewsAPI.org](https://newsapi.org)                               | `input_*.csv`, `output_*.csv`                                      | Date, Title, Source, Text, Ticker/Topic                                           |
 | **US (Trump) Tariff Timeline**                | <img src="logos_readme/jdsupra.png" alt="JD Supra" height="24"/> [JD Supra](https://www.jdsupra.com/legalnews/trump-tariff-tracker-october-31-9019759/) | `output_trump_tariffs.csv`                                         | Date, Event Description, Sentiment, Topic, Importance                             |
-| **(Some) Market Data (on famous Assets)**     | <img src="logos_readme/yfinance.png" alt="Yahoo Finance" height="36"/>                                                     | `fed_rates_2023_2025.csv`, `yfinance_raw_daily.csv`, `indices_ohlc_2023_2025.csv` | Date, Rate, Event, Description, Symbol, Open, Close, Volume, Index Name, Sector, Region |
+| **(Some) Market Data (on famous Assets)**     | <img src="logos_readme/yfinance.png" alt="Yahoo Finance" height="36"/><br/>[Yahoo Finance](https://finance.yahoo.com/)              | `fed_rates_2023_2025.csv`, `yfinance_raw_daily.csv`, `indices_ohlc_2023_2025.csv` | Date, Rate, Event, Description, Symbol, Open, Close, Volume, Index Name, Sector, Region |
 
 ### 4.2 Data Enrichment with Hugging Face <img src="logos_readme/hflogo.png" alt="Hugging Face" height="32"/>
 
