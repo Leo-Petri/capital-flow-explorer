@@ -212,10 +212,10 @@ export function InspectorPanel({
                       variant="outline" 
                       className={
                         regime.stance === 'Risk-On'
-                          ? 'bg-green-500/10 text-green-500 border-green-500/30'
+                          ? 'bg-green-500/10 text-green-400 border-green-500/30'
                           : regime.stance === 'Risk-Off'
-                          ? 'bg-red-500/10 text-red-500 border-red-500/30'
-                          : 'bg-muted text-muted-foreground border-muted-foreground/30'
+                          ? 'bg-green-500/10 text-green-600 border-green-600/30'
+                          : 'bg-green-500/10 text-green-500 border-green-500/30'
                       }
                     >
                       {regime.stance}
@@ -627,52 +627,6 @@ export function InspectorPanel({
             )}
           </div>
         </div>
-
-        {/* Risk-On/Risk-Off Analysis */}
-        {(() => {
-          const riskAnalysis = analyzeRiskBehavior(stackedData);
-          if (!riskAnalysis) return null;
-
-          const regimes = [riskAnalysis.rateCuts, riskAnalysis.zeroRates, riskAnalysis.rateHikes];
-
-          return (
-            <div className="px-6 py-4 border-b border-[rgba(255,255,255,0.05)] bg-muted/20">
-              <h3 className="text-sm font-semibold mb-3">Risk-On/Risk-Off Analysis</h3>
-              <div className="space-y-4">
-                {regimes.map((regime, idx) => (
-                  <div key={idx} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-muted-foreground font-medium">{regime.period}</span>
-                      <Badge 
-                        variant="outline" 
-                        className={
-                          regime.stance === 'Risk-On'
-                            ? 'bg-green-500/10 text-green-500 border-green-500/30'
-                            : regime.stance === 'Risk-Off'
-                            ? 'bg-red-500/10 text-red-500 border-red-500/30'
-                            : 'bg-muted text-muted-foreground border-muted-foreground/30'
-                        }
-                      >
-                        {regime.stance}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground/70 pl-2 space-y-1">
-                      <div>
-                        Hot + Very Hot: <span className="font-mono font-semibold text-foreground">{regime.hotVeryHotPct.toFixed(1)}%</span>
-                      </div>
-                      <div>
-                        Cold + Mild: <span className="font-mono font-semibold text-foreground">{regime.coldMildPct.toFixed(1)}%</span>
-                      </div>
-                      <div>
-                        Warm: <span className="font-mono font-semibold text-foreground">{regime.warmPct.toFixed(1)}%</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })()}
 
         <div className="p-6 flex-1 overflow-hidden flex flex-col">
           <h3 className="text-sm font-semibold mb-3">
