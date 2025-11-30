@@ -284,6 +284,65 @@ function transformFinancialNewsRowToSignal(row: FinancialNewsCsvRow, index: numb
   };
 }
 
+// Generate interest rate change signals from FED_RATES
+function generateInterestRateSignals(): Signal[] {
+  const signals: Signal[] = [];
+  
+  for (let i = 1; i < FED_RATES.length; i++) {
+    const prevRate = FED_RATES[i - 1];
+    const currentRate = FED_RATES[i];
+    const rateChange = currentRate.rate - prevRate.rate;
+    const absChange = Math.abs(rateChange);
+    
+    // Skip if no significant change (less than 0.1%)
+    if (absChange < 0.1) continue;
+    
+    // Determine color: hikes = red (bad), cuts = green (good)
+    let color: 'green' | 'gray' | 'red';
+    if (rateChange > 0) {
+      color = 'red'; // Rate hike - typically bad for markets
+    } else {
+      color = 'green'; // Rate cut - typically good for markets
+    }
+    
+    // Determine importance based on magnitude
+    let importance: 'low' | 'medium' | 'high';
+    if (absChange >= 1.0) {
+      importance = 'high'; // Large change (1% or more)
+    } else if (absChange >= 0.5) {
+      importance = 'medium'; // Medium change (0.5-1%)
+    } else {
+      importance = 'low'; // Small change (0.1-0.5%)
+    }
+    
+    // Format date (convert YYYY-MM to YYYY-MM-01 for consistency)
+    const dateFormatted = currentRate.date.includes('-') && currentRate.date.length === 7
+      ? `${currentRate.date}-01`
+      : currentRate.date;
+    
+    // Create title and description
+    const changeDirection = rateChange > 0 ? 'hiked' : 'cut';
+    const changeAmount = absChange.toFixed(2);
+    const prevRateFormatted = prevRate.rate.toFixed(2);
+    const currentRateFormatted = currentRate.rate.toFixed(2);
+    
+    const title = `Fed ${changeDirection} interest rates by ${changeAmount}% to ${currentRateFormatted}%`;
+    const description = `The Federal Reserve ${changeDirection} the federal funds rate from ${prevRateFormatted}% to ${currentRateFormatted}% (change of ${changeAmount}%). This monetary policy decision affects borrowing costs, investment decisions, and market sentiment.`;
+    
+    signals.push({
+      id: `signal-rate-${i}`,
+      date: dateFormatted,
+      type: 'rates',
+      title,
+      description,
+      importance,
+      color,
+    });
+  }
+  
+  return signals;
+}
+
 // Load signals from CSV
 let cachedSignals: Signal[] | null = null;
 
@@ -309,6 +368,53 @@ export async function loadSignalsFromCSV(): Promise<Signal[]> {
     
     const allSignals: Signal[] = [];
     
+    // Helper function to sample well-distributed signals by importance
+    function sampleSignalsByImportance(signals: Signal[], maxCount: number): Signal[] {
+      // Filter to only high and medium importance
+      const filtered = signals.filter(s => s.importance === 'high' || s.importance === 'medium');
+      
+      if (filtered.length <= maxCount) {
+        return filtered;
+      }
+      
+      // Separate by importance
+      const highImportance = filtered.filter(s => s.importance === 'high');
+      const mediumImportance = filtered.filter(s => s.importance === 'medium');
+      
+      // Calculate distribution: roughly 60% high, 40% medium
+      const highCount = Math.min(Math.ceil(maxCount * 0.6), highImportance.length);
+      const mediumCount = Math.min(maxCount - highCount, mediumImportance.length);
+      
+      // Sample evenly distributed across date range
+      function sampleEvenly<T extends { date: string }>(items: T[], count: number): T[] {
+        if (items.length <= count) return items;
+        if (count === 0) return [];
+        
+        // Sort by date to ensure chronological order
+        const sorted = [...items].sort((a, b) => a.date.localeCompare(b.date));
+        
+        // Calculate step size to evenly distribute across the range
+        const step = (sorted.length - 1) / (count - 1);
+        const sampled: T[] = [];
+        
+        for (let i = 0; i < count; i++) {
+          const index = Math.round(i * step);
+          sampled.push(sorted[index]);
+        }
+        
+        return sampled;
+      }
+      
+      const sampledHigh = sampleEvenly(highImportance, highCount);
+      const sampledMedium = sampleEvenly(mediumImportance, mediumCount);
+      
+      // Combine and sort by date
+      const combined = [...sampledHigh, ...sampledMedium];
+      combined.sort((a, b) => a.date.localeCompare(b.date));
+      
+      return combined;
+    }
+    
     // Parse tech stock news
     if (techStockResponse.ok) {
       try {
@@ -319,7 +425,12 @@ export async function loadSignalsFromCSV(): Promise<Signal[]> {
         const techStockSignals = techStockRows.map((row, index) => 
           transformTechStockRowToSignal(row, index)
         );
-        allSignals.push(...techStockSignals);
+        
+        // Sort by date first, then sample
+        techStockSignals.sort((a, b) => a.date.localeCompare(b.date));
+        const sampledTechSignals = sampleSignalsByImportance(techStockSignals, 8); // Sample 8 signals
+        console.log(`📊 Sampled ${sampledTechSignals.length} tech signals (${sampledTechSignals.filter(s => s.importance === 'high').length} high, ${sampledTechSignals.filter(s => s.importance === 'medium').length} medium)`);
+        allSignals.push(...sampledTechSignals);
       } catch (error) {
         console.error('❌ Failed to parse tech stock CSV:', error);
       }
@@ -335,11 +446,21 @@ export async function loadSignalsFromCSV(): Promise<Signal[]> {
         const financialNewsSignals = financialNewsRows.map((row, index) => 
           transformFinancialNewsRowToSignal(row, index)
         );
-        allSignals.push(...financialNewsSignals);
+        
+        // Sort by date first, then sample
+        financialNewsSignals.sort((a, b) => a.date.localeCompare(b.date));
+        const sampledFinancialSignals = sampleSignalsByImportance(financialNewsSignals, 8); // Sample 8 signals
+        console.log(`📊 Sampled ${sampledFinancialSignals.length} financial signals (${sampledFinancialSignals.filter(s => s.importance === 'high').length} high, ${sampledFinancialSignals.filter(s => s.importance === 'medium').length} medium)`);
+        allSignals.push(...sampledFinancialSignals);
       } catch (error) {
         console.error('❌ Failed to parse financial news CSV:', error);
       }
     }
+    
+    // Add interest rate change signals
+    const rateSignals = generateInterestRateSignals();
+    console.log(`✅ Generated ${rateSignals.length} interest rate change signals`);
+    allSignals.push(...rateSignals);
     
     // Sort by date
     allSignals.sort((a, b) => {
@@ -351,7 +472,7 @@ export async function loadSignalsFromCSV(): Promise<Signal[]> {
     });
     
     cachedSignals = allSignals;
-    console.log(`✅ Loaded ${allSignals.length} total signals from CSV files`);
+    console.log(`✅ Loaded ${allSignals.length} total signals (${allSignals.length - rateSignals.length} from CSV + ${rateSignals.length} rate changes)`);
     
     if (allSignals.length > 0) {
       console.log(`📅 Signal date range: ${allSignals[0].date} to ${allSignals[allSignals.length - 1].date}`);

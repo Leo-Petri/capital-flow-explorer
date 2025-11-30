@@ -178,9 +178,9 @@ export function ControlsPanel({
           />
         </div>
 
-        {/* Per-Type Toggles (only visible when main toggle is ON) */}
+        {/* Per-Type Toggles and Timeline (only visible when main toggle is ON) */}
         {showNewsSignals && (
-          <div className="pl-4 space-y-2 border-l-2 border-[#1F2937]">
+          <div className="pl-4 space-y-4 border-l-2 border-[#1F2937]">
             {/* Good Signals */}
             <div className="flex items-center justify-between">
               <Label htmlFor="good-signals" className="text-xs text-[#9CA3AF] cursor-pointer flex items-center gap-2">
@@ -222,37 +222,35 @@ export function ControlsPanel({
                 className="scale-75"
               />
             </div>
-          </div>
-        )}
-      </div>
 
-      {/* Timeline */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Timeline</h2>
-          <div className="flex items-center gap-2 mb-3">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onPlayPause}
-              className="w-10 h-10 p-0 rounded-none bg-[#1E293B] hover:bg-[#334155] border-[#1F2937]"
-            >
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </Button>
-            <div className="flex-1">
-              <p className="text-sm font-mono text-[#E5E7EB]">
-                {formatDate(currentDate)}
-              </p>
+            {/* Timeline */}
+            <div className="space-y-3 pt-2 border-t border-[#1F2937]">
+              <h3 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest">Timeline</h3>
+              <div className="flex items-center gap-2 mb-3">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onPlayPause}
+                  className="w-10 h-10 p-0 rounded-none bg-[#1E293B] hover:bg-[#334155] border-[#1F2937]"
+                >
+                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                </Button>
+                <div className="flex-1">
+                  <p className="text-sm font-mono text-[#E5E7EB]">
+                    {formatDate(currentDate)}
+                  </p>
+                </div>
+              </div>
+              <Slider
+                value={[currentDateIndex]}
+                onValueChange={([val]) => onDateIndexChange(val)}
+                max={maxDateIndex}
+                step={1}
+                className="w-full"
+              />
             </div>
           </div>
-          <Slider
-            value={[currentDateIndex]}
-            onValueChange={([val]) => onDateIndexChange(val)}
-            max={maxDateIndex}
-            step={1}
-            className="w-full"
-          />
-        </div>
+        )}
       </div>
     </div>
   );

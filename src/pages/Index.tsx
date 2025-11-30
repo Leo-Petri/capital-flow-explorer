@@ -114,6 +114,15 @@ const Index = () => {
     return data;
   }, [filteredAssets, ASSET_KPI_DATA, selectedKpi, MONTHLY_DATES]);
 
+  // Reset timeline when showNewsSignals is turned off
+  useEffect(() => {
+    if (!showNewsSignals) {
+      setCurrentDateIndex(0);
+      setIsPlaying(false);
+      setSelectedSignal(null);
+    }
+  }, [showNewsSignals]);
+
   // Play/pause animation (slower for daily data)
   useEffect(() => {
     if (!isPlaying || MONTHLY_DATES.length === 0) return;
