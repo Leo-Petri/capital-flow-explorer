@@ -131,7 +131,7 @@ export function ControlsPanel({
 
       {/* KPI Selector */}
       <div className="space-y-4">
-        <h2 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">KPI</h2>
+        <h2 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Choose Financial KPI</h2>
         <div className="space-y-2">
           <Label className="text-sm text-[#9CA3AF]">View KPI as Y-Axis</Label>
           <Select value={selectedKpi} onValueChange={(val) => onKpiChange(val as KpiId)}>
@@ -139,11 +139,13 @@ export function ControlsPanel({
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-none bg-[#111827] border-[#1F2937]">
-              {Object.entries(KPI_LABELS).map(([key, label]) => (
-                <SelectItem key={key} value={key} className="text-[#E5E7EB]">
-                  {label}
-                </SelectItem>
-              ))}
+              {Object.entries(KPI_LABELS)
+                .filter(([key]) => key !== 'pl' && key !== 'quoted_alloc' && key !== 'cf')
+                .map(([key, label]) => (
+                  <SelectItem key={key} value={key} className="text-[#E5E7EB]">
+                    {label}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
