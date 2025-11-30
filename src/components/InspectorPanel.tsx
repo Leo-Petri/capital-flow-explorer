@@ -383,13 +383,11 @@ export function InspectorPanel({
             {/* Position Chart */}
             {(() => {
               // OPTIMIZATION: Pre-filter and map in single pass
-              const chartData: { date: string; position: number; fedRate: number | null }[] = [];
+              const chartData: { date: string; position: number }[] = [];
               for (let i = 0; i < navSeries.length; i++) {
                 const s = navSeries[i];
                 if (s.value > 0) {
-                  // Get Fed rate for this date
-                  const fedRate = getFedRateForDate(s.date, FED_RATES);
-                  chartData.push({ date: s.date, position: s.value, fedRate });
+                  chartData.push({ date: s.date, position: s.value });
                 }
               }
               
@@ -415,8 +413,6 @@ export function InspectorPanel({
                 return `$${value}`;
               };
               
-              const rateTickFormatter = (value: number) => `${value.toFixed(1)}%`;
-              
               const tooltipLabelFormatter = (value: string) => {
                 try {
                   const date = new Date(value);
@@ -430,8 +426,6 @@ export function InspectorPanel({
               const tooltipFormatter = (value: number, name: string) => {
                 if (name === 'Position (NAV)') {
                   return [`$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, name];
-                } else if (name === 'Fed Rate') {
-                  return [`${value.toFixed(2)}%`, name];
                 }
                 return [value, name];
               };
@@ -445,16 +439,12 @@ export function InspectorPanel({
                         label: "Position (NAV)",
                         color: "hsl(var(--chart-line-bright))",
                       },
-                      fedRate: {
-                        label: "Fed Rate",
-                        color: "#D4A017",
-                      },
                     }}
                     className="h-[200px] w-full"
                   >
                     <ComposedChart 
                       data={chartData}
-                      margin={{ top: 5, right: 50, left: 10, bottom: 5 }}
+                      margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                       <XAxis
@@ -470,13 +460,6 @@ export function InspectorPanel({
                         className="text-xs"
                         tick={{ fill: 'hsl(var(--muted-foreground))' }}
                       />
-                      <YAxis
-                        yAxisId="rate"
-                        orientation="right"
-                        tickFormatter={rateTickFormatter}
-                        className="text-xs"
-                        tick={{ fill: '#D4A017' }}
-                      />
                       <ChartTooltip
                         content={<ChartTooltipContent />}
                         labelFormatter={tooltipLabelFormatter}
@@ -490,16 +473,6 @@ export function InspectorPanel({
                         strokeWidth={2}
                         dot={false}
                         activeDot={{ r: 4, fill: "hsl(var(--chart-line-bright))" }}
-                      />
-                      <Line
-                        yAxisId="rate"
-                        type="stepAfter"
-                        dataKey="fedRate"
-                        stroke="#D4A017"
-                        strokeWidth={2.5}
-                        dot={false}
-                        strokeDasharray="0"
-                        connectNulls={false}
                       />
                     </ComposedChart>
                   </ChartContainer>
@@ -613,9 +586,6 @@ export function InspectorPanel({
     const stats = getBandStats(selectedBand, assetsForStats, assetKpiData, selectedKpi, currentDate);
     // Use filtered assets for the display list
     const bandAssets = getAssetsInBand(assets, selectedBand);
-    
-    // Get Fed rate for current date
-    const fedRate = getFedRateForDate(currentDate, FED_RATES);
 
     return (
       <div className="h-full rounded-none flex flex-col overflow-hidden border-l border-[#1F2937]" style={{ backgroundColor: '#111827' }}>
