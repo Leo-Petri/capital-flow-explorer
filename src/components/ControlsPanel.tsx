@@ -58,6 +58,7 @@ const KPI_LABELS: Record<KpiId, string> = {
   nav: 'Net Asset Value',
   pl: 'Profit & Loss',
   twr: 'Time-Weighted Return (%)',
+  irr: 'Internal Rate of Return (%)',
   quoted_alloc: 'Quoted Allocation (%)',
   cf: 'Cash Flow',
 };

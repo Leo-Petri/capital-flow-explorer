@@ -238,6 +238,121 @@ function getNavForDate(navMapData: NavMapData, targetDate: string): number {
   return 0;
 }
 
+/**
+ * Calculate IRR (Internal Rate of Return) using Newton-Raphson method
+ * IRR is the discount rate that makes NPV = 0
+ * @param cashFlows Array of cash flows with dates: [{date: string, amount: number}, ...]
+ * @param currentDate The date to calculate IRR up to
+ * @param currentValue Current NAV value at currentDate (if asset is still held)
+ * @returns IRR as a percentage (e.g., 10.5 for 10.5%), or 0 if calculation fails
+ */
+function calculateIRR(
+  cashFlows: Array<{ date: string; amount: number }>,
+  currentDate: string,
+  currentValue: number
+): number {
+  // If no cash flows or current value, return 0
+  if (cashFlows.length === 0 && currentValue === 0) {
+    return 0;
+  }
+
+  // Build cash flow array: negative for buys (outflows), positive for sells (inflows)
+  // Add current NAV as final cash flow if > 0
+  const flows: Array<{ date: Date; amount: number }> = [];
+  
+  cashFlows.forEach(cf => {
+    if (cf.date <= currentDate) {
+      flows.push({
+        date: new Date(cf.date),
+        amount: cf.amount
+      });
+    }
+  });
+
+  // Add current NAV as final cash flow (if asset is still held)
+  if (currentValue > 0) {
+    flows.push({
+      date: new Date(currentDate),
+      amount: currentValue
+    });
+  }
+
+  // Need at least one negative (investment) and one positive (return) cash flow
+  const hasNegative = flows.some(f => f.amount < 0);
+  const hasPositive = flows.some(f => f.amount > 0);
+  
+  if (!hasNegative || !hasPositive || flows.length < 2) {
+    return 0;
+  }
+
+  // Sort by date
+  flows.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  // Use first date as reference (t=0)
+  const t0 = flows[0].date.getTime();
+  const daysPerYear = 365.25;
+
+  // Calculate time periods in years from t0
+  const periods = flows.map(f => (f.date.getTime() - t0) / (1000 * 60 * 60 * 24 * daysPerYear));
+
+  // NPV function: NPV(r) = sum(CF_i / (1+r)^t_i)
+  const npv = (rate: number): number => {
+    return flows.reduce((sum, flow, i) => {
+      const t = periods[i];
+      return sum + flow.amount / Math.pow(1 + rate, t);
+    }, 0);
+  };
+
+  // NPV derivative for Newton-Raphson: dNPV/dr = sum(-t_i * CF_i / (1+r)^(t_i+1))
+  const npvDerivative = (rate: number): number => {
+    return flows.reduce((sum, flow, i) => {
+      const t = periods[i];
+      return sum - (t * flow.amount) / Math.pow(1 + rate, t + 1);
+    }, 0);
+  };
+
+  // Newton-Raphson method to find IRR
+  let rate = 0.1; // Start with 10% guess
+  const maxIterations = 100;
+  const tolerance = 1e-6;
+
+  for (let i = 0; i < maxIterations; i++) {
+    const npvValue = npv(rate);
+    const derivative = npvDerivative(rate);
+
+    // If derivative is too small, can't converge
+    if (Math.abs(derivative) < 1e-10) {
+      break;
+    }
+
+    const newRate = rate - npvValue / derivative;
+
+    // Check convergence
+    if (Math.abs(newRate - rate) < tolerance) {
+      rate = newRate;
+      break;
+    }
+
+    // Prevent negative rates or rates that are too large
+    if (newRate < -0.99 || newRate > 10) {
+      break;
+    }
+
+    rate = newRate;
+  }
+
+  // Convert to percentage and return
+  // Clamp to reasonable range: -100% to 1000%
+  const irrPercent = Math.max(-100, Math.min(1000, rate * 100));
+  
+  // If result is clearly invalid (NaN or Infinity), return 0
+  if (!isFinite(irrPercent)) {
+    return 0;
+  }
+
+  return irrPercent;
+}
+
 export function transformClientData(rawData: RawAssetData[]): {
   assets: Asset[];
   kpiData: AssetKpiPoint[];
@@ -435,7 +550,7 @@ export function transformClientData(rawData: RawAssetData[]): {
   
   // Generate KPI data using actual daily NAV values
   const kpiData: AssetKpiPoint[] = [];
-  const kpis: KpiId[] = ['nav', 'pl', 'twr', 'quoted_alloc', 'cf'];
+  const kpis: KpiId[] = ['nav', 'pl', 'twr', 'irr', 'quoted_alloc', 'cf'];
   
   // Track initial NAV for each asset (first NAV value from 2019)
   const assetInitialNav = new Map<string, number>();
@@ -466,10 +581,23 @@ export function transformClientData(rawData: RawAssetData[]): {
     const dateCount = dailyDates.length;
     const invDateCount = 1 / dateCount; // Pre-calculate division
     
-    // Pre-allocate array for better performance (5 KPIs per date)
+    // Pre-allocate array for better performance (6 KPIs per date)
     const assetKpiData: AssetKpiPoint[] = [];
-    assetKpiData.length = dateCount * 5;
+    assetKpiData.length = dateCount * 6;
     let kpiIndex = 0;
+    
+    // Pre-calculate cash flows from transactions for IRR calculation
+    const cashFlows: Array<{ date: string; amount: number }> = [];
+    rawAsset.transactions.forEach(txn => {
+      // Buy transaction: negative cash flow (money going out)
+      if (txn.buy_date >= minDate && txn.buy_date <= latestDate) {
+        cashFlows.push({ date: txn.buy_date, amount: -txn.purchase_price });
+      }
+      // Sell transaction: positive cash flow (money coming in)
+      if (txn.sell_date >= minDate && txn.sell_date <= latestDate) {
+        cashFlows.push({ date: txn.sell_date, amount: txn.selling_price });
+      }
+    });
     
     dailyDates.forEach((date, idx) => {
       // Get NAV for this date from daily_changes (now using optimized binary search)
@@ -482,10 +610,14 @@ export function transformClientData(rawData: RawAssetData[]): {
       const progress = idx * invDateCount; // Use multiplication instead of division
       const cf = totalProfit * progress;
       
+      // Calculate IRR: based on cash flows up to this date and current NAV
+      const irr = calculateIRR(cashFlows, date, navValue);
+      
       // Push all KPIs at once (more efficient than individual pushes)
       assetKpiData[kpiIndex++] = { date, assetId: asset.id, kpi: 'nav', value: navValue };
       assetKpiData[kpiIndex++] = { date, assetId: asset.id, kpi: 'pl', value: pl };
       assetKpiData[kpiIndex++] = { date, assetId: asset.id, kpi: 'twr', value: twr };
+      assetKpiData[kpiIndex++] = { date, assetId: asset.id, kpi: 'irr', value: irr };
       assetKpiData[kpiIndex++] = { date, assetId: asset.id, kpi: 'quoted_alloc', value: navValue };
       assetKpiData[kpiIndex++] = { date, assetId: asset.id, kpi: 'cf', value: cf };
     });

@@ -22,7 +22,7 @@ export interface Asset {
   }>; // Transaction details
 }
 
-export type KpiId = 'nav' | 'pl' | 'twr' | 'quoted_alloc' | 'cf';
+export type KpiId = 'nav' | 'pl' | 'twr' | 'irr' | 'quoted_alloc' | 'cf';
 
 export interface AssetKpiPoint {
   date: string;

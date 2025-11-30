@@ -1,5 +1,5 @@
 import { Asset, VolatilityBandId, Signal, KpiId, FED_RATES, RatePoint } from '@/data/mockData';
-import { VOLATILITY_BAND_INFO, getBandStats, getAssetsInBand, getAssetKpiSeries } from '@/lib/aggregation';
+import { VOLATILITY_BAND_INFO, getBandStats, getAssetsInBand, getAssetKpiSeries, aggregateByVolatilityBand } from '@/lib/aggregation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,9 +62,11 @@ function getFedRateForDate(date: string, fedRates: RatePoint[]): number | null {
 // Analyze Risk-On/Risk-Off behavior during interest rate regimes
 interface RegimeAnalysis {
   period: string;
-  hotVeryHotPct: number;
-  coldMildPct: number;
+  coldPct: number;
+  mildPct: number;
   warmPct: number;
+  hotPct: number;
+  veryHotPct: number;
   stance: 'Risk-On' | 'Risk-Off' | 'Neutral';
 }
 
@@ -111,23 +113,25 @@ function analyzeRiskBehavior(
     if (regimeData.length === 0) {
       results[regime.key] = {
         period: regime.period,
-        hotVeryHotPct: 0,
-        coldMildPct: 0,
+        coldPct: 0,
+        mildPct: 0,
         warmPct: 0,
+        hotPct: 0,
+        veryHotPct: 0,
         stance: 'Neutral' as const,
       };
       return;
     }
 
-    // Calculate average percentages for this regime
-    const avgHotVeryHot = regimeData.reduce((sum, d) => {
+    // Calculate average percentages for each volatility band in this regime
+    const avgCold = regimeData.reduce((sum, d) => {
       const total = d.total || 1;
-      return sum + ((d.hot + d.very_hot) / total) * 100;
+      return sum + (d.cold / total) * 100;
     }, 0) / regimeData.length;
 
-    const avgColdMild = regimeData.reduce((sum, d) => {
+    const avgMild = regimeData.reduce((sum, d) => {
       const total = d.total || 1;
-      return sum + ((d.cold + d.mild) / total) * 100;
+      return sum + (d.mild / total) * 100;
     }, 0) / regimeData.length;
 
     const avgWarm = regimeData.reduce((sum, d) => {
@@ -135,15 +139,26 @@ function analyzeRiskBehavior(
       return sum + (d.warm / total) * 100;
     }, 0) / regimeData.length;
 
+    const avgHot = regimeData.reduce((sum, d) => {
+      const total = d.total || 1;
+      return sum + (d.hot / total) * 100;
+    }, 0) / regimeData.length;
+
+    const avgVeryHot = regimeData.reduce((sum, d) => {
+      const total = d.total || 1;
+      return sum + (d.very_hot / total) * 100;
+    }, 0) / regimeData.length;
+
     // Determine stance:
     // Risk-On if high-entropy (Warm + Hot + Very Hot) > 50%
     // Risk-Off if low-entropy (Cold + Mild) > 50%
     // Neutral otherwise
-    const highVolPct = avgWarm + avgHotVeryHot;
+    const highVolPct = avgWarm + avgHot + avgVeryHot;
+    const lowVolPct = avgCold + avgMild;
     let stance: 'Risk-On' | 'Risk-Off' | 'Neutral';
     if (highVolPct > 50) {
       stance = 'Risk-On';
-    } else if (avgColdMild > 50) {
+    } else if (lowVolPct > 50) {
       stance = 'Risk-Off';
     } else {
       stance = 'Neutral';
@@ -151,9 +166,11 @@ function analyzeRiskBehavior(
 
     results[regime.key] = {
       period: regime.period,
-      hotVeryHotPct: avgHotVeryHot,
-      coldMildPct: avgColdMild,
+      coldPct: avgCold,
+      mildPct: avgMild,
       warmPct: avgWarm,
+      hotPct: avgHot,
+      veryHotPct: avgVeryHot,
       stance,
     };
   });
@@ -178,7 +195,16 @@ export function InspectorPanel({
 
   // Show Risk-On/Risk-Off Analysis by default when nothing is selected
   if (!selectedBand && !selectedAsset) {
-    const riskAnalysis = analyzeRiskBehavior(stackedData);
+    // Risk-On/Risk-Off analysis should always use NAV for the entire portfolio,
+    // regardless of selected KPI or filter mode
+    const assetsForAnalysis = allAssets || assets;
+    const navStackedData = aggregateByVolatilityBand(
+      assetsForAnalysis,
+      assetKpiData,
+      'nav', // Always use NAV for Risk-On/Risk-Off analysis
+      monthlyDates
+    );
+    const riskAnalysis = analyzeRiskBehavior(navStackedData);
     
     if (!riskAnalysis) {
       return (
@@ -223,16 +249,24 @@ export function InspectorPanel({
                   </div>
                   <div className="text-xs text-muted-foreground space-y-1.5 pl-2">
                     <div className="flex justify-between">
-                      <span>Hot + Very Hot:</span>
-                      <span className="font-mono font-semibold text-foreground">{regime.hotVeryHotPct.toFixed(1)}%</span>
+                      <span>Cold:</span>
+                      <span className="font-mono font-semibold text-foreground">{regime.coldPct.toFixed(1)}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Cold + Mild:</span>
-                      <span className="font-mono font-semibold text-foreground">{regime.coldMildPct.toFixed(1)}%</span>
+                      <span>Mild:</span>
+                      <span className="font-mono font-semibold text-foreground">{regime.mildPct.toFixed(1)}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Warm:</span>
                       <span className="font-mono font-semibold text-foreground">{regime.warmPct.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Hot:</span>
+                      <span className="font-mono font-semibold text-foreground">{regime.hotPct.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Very Hot:</span>
+                      <span className="font-mono font-semibold text-foreground">{regime.veryHotPct.toFixed(1)}%</span>
                     </div>
                   </div>
                 </CardContent>
