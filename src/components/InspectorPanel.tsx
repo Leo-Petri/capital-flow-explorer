@@ -176,13 +176,75 @@ export function InspectorPanel({
   stackedData,
 }: InspectorPanelProps) {
 
-  // Only show empty state if neither band nor asset is selected
-  // (Signals are handled separately in NewsPanel and don't affect this panel)
+  // Show Risk-On/Risk-Off Analysis by default when nothing is selected
   if (!selectedBand && !selectedAsset) {
+    const riskAnalysis = analyzeRiskBehavior(stackedData);
+    
+    if (!riskAnalysis) {
+      return (
+        <div className="h-full rounded-none border-l border-[#1F2937] p-6" style={{ backgroundColor: '#111827' }}>
+          <div className="text-center text-[#9CA3AF] space-y-2">
+            <p className="text-sm">Click on a volatility band or asset to inspect details.</p>
+          </div>
+        </div>
+      );
+    }
+
+    const regimes = [riskAnalysis.rateCuts, riskAnalysis.zeroRates, riskAnalysis.rateHikes];
+
     return (
-      <div className="h-full rounded-none border-l border-[#1F2937] p-6" style={{ backgroundColor: '#111827' }}>
-        <div className="text-center text-[#9CA3AF] space-y-2">
-          <p className="text-sm">Click on a volatility band or asset to inspect details.</p>
+      <div className="h-full rounded-none border-l border-[#1F2937] p-6 overflow-y-auto" style={{ backgroundColor: '#111827' }}>
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-xl font-bold text-[#E5E7EB] mb-2">Risk-On/Risk-Off Analysis</h2>
+            <p className="text-sm text-muted-foreground">
+              Portfolio allocation behavior across different interest rate environments
+            </p>
+          </div>
+          
+          <div className="space-y-4 pt-2">
+            {regimes.map((regime, idx) => (
+              <Card key={idx}>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm font-medium text-foreground">{regime.period}</span>
+                    <Badge 
+                      variant="outline" 
+                      className={
+                        regime.stance === 'Risk-On'
+                          ? 'bg-green-500/10 text-green-500 border-green-500/30'
+                          : regime.stance === 'Risk-Off'
+                          ? 'bg-red-500/10 text-red-500 border-red-500/30'
+                          : 'bg-muted text-muted-foreground border-muted-foreground/30'
+                      }
+                    >
+                      {regime.stance}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground space-y-1.5 pl-2">
+                    <div className="flex justify-between">
+                      <span>Hot + Very Hot:</span>
+                      <span className="font-mono font-semibold text-foreground">{regime.hotVeryHotPct.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Cold + Mild:</span>
+                      <span className="font-mono font-semibold text-foreground">{regime.coldMildPct.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Warm:</span>
+                      <span className="font-mono font-semibold text-foreground">{regime.warmPct.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="pt-4 border-t border-[rgba(255,255,255,0.05)]">
+            <p className="text-xs text-muted-foreground text-center">
+              Click on a volatility band or asset to inspect details
+            </p>
+          </div>
         </div>
       </div>
     );
