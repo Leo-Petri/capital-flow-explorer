@@ -1,17 +1,17 @@
 import { useState, useEffect, useMemo } from "react";
 import { ControlsPanel } from "@/components/ControlsPanel";
-import { EntropyRiver } from "@/components/EntropyRiver";
+import { VolatilityRiver } from "@/components/VolatilityRiver";
 import { InspectorPanel } from "@/components/InspectorPanel";
 import {
   loadClientData,
-  SIGNALS,
+  loadSignalsFromCSV,
   FED_RATES,
   KpiId,
-  EntropyBandId,
+  VolatilityBandId,
   Asset,
   Signal,
 } from "@/data/mockData";
-import { aggregateByEntropyBand } from "@/lib/aggregation";
+import { aggregateByVolatilityBand } from "@/lib/aggregation";
 
 const Index = () => {
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -26,18 +26,23 @@ const Index = () => {
   const [filterMode, setFilterMode] = useState<"all" | "liquid" | "illiquid">(
     "all"
   );
-  const [entropyThreshold, setEntropyThreshold] = useState(0);
   const [selectedKpi, setSelectedKpi] = useState<KpiId>("nav");
   const [showFedRate, setShowFedRate] = useState(true);
-  const [selectedBand, setSelectedBand] = useState<EntropyBandId | null>(null);
+  const [selectedBand, setSelectedBand] = useState<VolatilityBandId | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
+  const [signals, setSignals] = useState<Signal[]>([]);
 
-  // Load client data on mount
+  // Load client data and signals on mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        const data = await loadClientData();
+        // Load portfolio data and signals in parallel
+        const [data, loadedSignals] = await Promise.all([
+          loadClientData(),
+          loadSignalsFromCSV(),
+        ]);
+        
         console.log("✅ Portfolio data loaded:", {
           assetsCount: data.ASSETS.length,
           datesCount: data.MONTHLY_DATES.length,
@@ -47,12 +52,21 @@ const Index = () => {
             data.MONTHLY_DATES[data.MONTHLY_DATES.length - 1]
           }`,
         });
+        
+        console.log("✅ Signals loaded:", {
+          signalsCount: loadedSignals.length,
+          dateRange: loadedSignals.length > 0 
+            ? `${loadedSignals[0].date} to ${loadedSignals[loadedSignals.length - 1].date}`
+            : 'N/A',
+        });
+        
         setPortfolioData(data);
+        setSignals(loadedSignals);
         setDataLoaded(true);
       } catch (err) {
-        console.error("❌ Failed to load portfolio data:", err);
+        console.error("❌ Failed to load data:", err);
         // Show error to user
-        alert("Failed to load portfolio data. Please refresh the page.");
+        alert("Failed to load data. Please refresh the page.");
       }
     };
     
@@ -80,7 +94,7 @@ const Index = () => {
 
   // Aggregate data for visualization
   const stackedData = useMemo(() => {
-    const data = aggregateByEntropyBand(
+    const data = aggregateByVolatilityBand(
       filteredAssets,
       ASSET_KPI_DATA,
       selectedKpi,
@@ -126,17 +140,21 @@ const Index = () => {
     );
   }
 
-  const handleBandClick = (band: EntropyBandId | null) => {
+  const handleBandClick = (band: VolatilityBandId | null) => {
     setSelectedBand(band);
     setSelectedAsset(null);
     setSelectedSignal(null);
   };
 
   const handleSignalClick = (signalId: string) => {
-    const signal = SIGNALS.find((s) => s.id === signalId);
-    setSelectedSignal(signal || null);
-    setSelectedBand(null);
-    setSelectedAsset(null);
+    const signal = signals.find((s) => s.id === signalId);
+    // Toggle: if clicking the same signal, deselect it
+    if (selectedSignal?.id === signalId) {
+      setSelectedSignal(null);
+    } else {
+      setSelectedSignal(signal || null);
+    }
+    // Don't clear band/asset when clicking signals
   };
 
   const handleInspectorClose = () => {
@@ -156,25 +174,22 @@ const Index = () => {
         onPlayPause={() => setIsPlaying(!isPlaying)}
         filterMode={filterMode}
         onFilterModeChange={setFilterMode}
-        entropyThreshold={entropyThreshold}
-        onEntropyThresholdChange={setEntropyThreshold}
         selectedKpi={selectedKpi}
         onKpiChange={setSelectedKpi}
         showFedRate={showFedRate}
         onShowFedRateChange={setShowFedRate}
       />
 
-      <EntropyRiver
+      <VolatilityRiver
         data={stackedData}
         currentDateIndex={currentDateIndex}
         onBandClick={handleBandClick}
         selectedBand={selectedBand}
-        signals={SIGNALS}
+        signals={signals}
         onSignalClick={handleSignalClick}
         selectedSignal={selectedSignal?.id || null}
         showFedRate={showFedRate}
         fedRates={FED_RATES}
-        entropyThreshold={entropyThreshold}
       />
 
       <InspectorPanel
@@ -182,7 +197,8 @@ const Index = () => {
         selectedAsset={selectedAsset}
         selectedSignal={selectedSignal}
         assets={filteredAssets}
-        currentDate={currentDate}
+        allAssets={ASSETS}
+        currentDate={currentDate || MONTHLY_DATES[0] || ''}
         selectedKpi={selectedKpi}
         onSelectAsset={setSelectedAsset}
         onClose={handleInspectorClose}

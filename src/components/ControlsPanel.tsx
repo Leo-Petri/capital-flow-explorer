@@ -39,8 +39,6 @@ interface ControlsPanelProps {
   onPlayPause: () => void;
   filterMode: 'all' | 'liquid' | 'illiquid';
   onFilterModeChange: (mode: 'all' | 'liquid' | 'illiquid') => void;
-  entropyThreshold: number;
-  onEntropyThresholdChange: (value: number) => void;
   selectedKpi: KpiId;
   onKpiChange: (kpi: KpiId) => void;
   showFedRate: boolean;
@@ -64,8 +62,6 @@ export function ControlsPanel({
   onPlayPause,
   filterMode,
   onFilterModeChange,
-  entropyThreshold,
-  onEntropyThresholdChange,
   selectedKpi,
   onKpiChange,
   showFedRate,
@@ -75,7 +71,7 @@ export function ControlsPanel({
     <div className="w-80 bg-card border-r border-border p-6 space-y-8 overflow-y-auto">
       <div>
         <h1 className="text-2xl font-bold text-foreground mb-1">River of Wealth</h1>
-        <p className="text-sm text-muted-foreground">Entropy Lens Portfolio</p>
+        <p className="text-sm text-muted-foreground">Volatility Lens Portfolio</p>
       </div>
 
       {/* Timeline */}
@@ -135,22 +131,6 @@ export function ControlsPanel({
           >
             Illiquid
           </Button>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm">
-            Entropy Threshold: {entropyThreshold}
-          </Label>
-          <Slider
-            value={[entropyThreshold]}
-            onValueChange={([val]) => onEntropyThresholdChange(val)}
-            max={100}
-            step={5}
-            className="w-full"
-          />
-          <p className="text-xs text-muted-foreground">
-            Highlight assets above this entropy score
-          </p>
         </div>
       </div>
 

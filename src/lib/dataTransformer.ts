@@ -1,4 +1,4 @@
-import { Asset, AssetKpiPoint, KpiId, EntropyBandId } from '@/data/mockData';
+import { Asset, AssetKpiPoint, KpiId, VolatilityBandId } from '@/data/mockData';
 
 export interface RawTransaction {
   buy_date: string;
@@ -30,7 +30,7 @@ export interface RawAssetData {
 interface AssetClassification {
   categoryPath: string[];
   isLiquid: boolean;
-  defaultEntropy?: number;
+  defaultVolatility?: number;
 }
 
 function classifyAsset(assetName: string, volatility: number, hasInterestRate: boolean): AssetClassification {
@@ -38,50 +38,50 @@ function classifyAsset(assetName: string, volatility: number, hasInterestRate: b
   
   // Cash & Deposits (cold)
   if (name.includes('cash') || name.includes('account -') || name.includes('eur cash')) {
-    return { categoryPath: ['Liquid assets', 'Cash'], isLiquid: true, defaultEntropy: 5 };
+    return { categoryPath: ['Liquid assets', 'Cash'], isLiquid: true, defaultVolatility: 5 };
   }
   
   // Bonds & Fixed Income (cold-mild)
   if (hasInterestRate || name.match(/\d{1,2}\/\d{2}\/\d{2}/) || name.includes('bond')) {
-    return { categoryPath: ['Liquid assets', 'Fixed Income'], isLiquid: true, defaultEntropy: 15 };
+    return { categoryPath: ['Liquid assets', 'Fixed Income'], isLiquid: true, defaultVolatility: 15 };
   }
   
   // Private Equity & VC (hot-very_hot)
   if (name.includes('pe ') || name.includes('private equity') || name.includes('vc fund') || 
       name.includes('venture') || name.includes('carlyle') || name.includes('ardian') ||
       name.includes('ballington') || name.includes('alpha one')) {
-    return { categoryPath: ['Illiquid assets', 'Private Equity'], isLiquid: false, defaultEntropy: 70 };
+    return { categoryPath: ['Illiquid assets', 'Private Equity'], isLiquid: false, defaultVolatility: 70 };
   }
   
   // Real Estate (warm)
   if (name.includes('properties') || name.includes('place') || name.includes('real estate') ||
       name.includes('property') || name.includes('building')) {
-    return { categoryPath: ['Illiquid assets', 'Real Estate'], isLiquid: false, defaultEntropy: 50 };
+    return { categoryPath: ['Illiquid assets', 'Real Estate'], isLiquid: false, defaultVolatility: 50 };
   }
   
   // Infrastructure (warm)
   if (name.includes('windpark') || name.includes('solar') || name.includes('infrastructure')) {
-    return { categoryPath: ['Illiquid assets', 'Infrastructure'], isLiquid: false, defaultEntropy: 48 };
+    return { categoryPath: ['Illiquid assets', 'Infrastructure'], isLiquid: false, defaultVolatility: 48 };
   }
   
   // Options & Derivatives (hot-very_hot)
   if (name.includes('call') || name.includes('put') || name.includes('option')) {
-    return { categoryPath: ['Liquid assets', 'Derivatives'], isLiquid: true, defaultEntropy: 75 };
+    return { categoryPath: ['Liquid assets', 'Derivatives'], isLiquid: true, defaultVolatility: 75 };
   }
   
   // Art & Collectibles (very_hot)
   if (name.includes('art') || name.includes('ferrari') || name.includes('collection')) {
-    return { categoryPath: ['Illiquid assets', 'Alternative'], isLiquid: false, defaultEntropy: 90 };
+    return { categoryPath: ['Illiquid assets', 'Alternative'], isLiquid: false, defaultVolatility: 90 };
   }
   
   // Loans (mild)
   if (name.includes('loan') || name.includes('financing') || name.includes('receivable')) {
-    return { categoryPath: ['Liquid assets', 'Fixed Income'], isLiquid: true, defaultEntropy: 20 };
+    return { categoryPath: ['Liquid assets', 'Fixed Income'], isLiquid: true, defaultVolatility: 20 };
   }
   
   // Accruals and Other Liabilities
   if (name.includes('accrual') || name.includes('payable')) {
-    return { categoryPath: ['Other', 'Accruals'], isLiquid: true, defaultEntropy: 5 };
+    return { categoryPath: ['Other', 'Accruals'], isLiquid: true, defaultVolatility: 5 };
   }
   
   // Known public companies (mild-hot based on volatility)
@@ -108,37 +108,115 @@ function classifyAsset(assetName: string, volatility: number, hasInterestRate: b
   }
   
   // Default: public equity
-  return { categoryPath: ['Liquid assets', 'Equities'], isLiquid: true, defaultEntropy: 40 };
+  return { categoryPath: ['Liquid assets', 'Equities'], isLiquid: true, defaultVolatility: 40 };
 }
 
-function calculateEntropyScore(volatility: number, classification: AssetClassification): number {
-  // If volatility is 0 or very low, use default entropy from classification
-  if (volatility < 0.001 && classification.defaultEntropy !== undefined) {
-    return classification.defaultEntropy;
+/**
+ * Calculate percentile thresholds from volatility distribution
+ * Returns volatility values at 20th, 40th, 60th, and 80th percentiles
+ */
+function calculateVolatilityPercentiles(volatilities: number[]): {
+  p20: number;
+  p40: number;
+  p60: number;
+  p80: number;
+} {
+  if (volatilities.length === 0) {
+    return { p20: 0, p40: 0, p60: 0, p80: 0 };
   }
   
-  // Map volatility (0-1) to entropy score (0-100)
-  // Amplify for better distribution
-  let score = Math.min(100, Math.round(volatility * 200));
+  const sorted = [...volatilities].sort((a, b) => a - b);
   
-  // Apply category-based adjustments
-  if (classification.categoryPath.includes('Private Equity')) {
-    score = Math.max(score, 65); // PE is always at least hot
-  } else if (classification.categoryPath.includes('Cash')) {
-    score = Math.min(score, 15); // Cash is always cold
+  return {
+    p20: sorted[Math.floor(sorted.length * 0.2)] || 0,
+    p40: sorted[Math.floor(sorted.length * 0.4)] || 0,
+    p60: sorted[Math.floor(sorted.length * 0.6)] || 0,
+    p80: sorted[Math.floor(sorted.length * 0.8)] || 0,
+  };
+}
+
+/**
+ * Calculate volatility score and band based on volatility percentiles
+ * Uses percentile-based clustering to ensure balanced distribution
+ */
+function calculateVolatilityFromPercentiles(
+  volatility: number,
+  percentiles: ReturnType<typeof calculateVolatilityPercentiles>,
+  classification: AssetClassification
+): { score: number; band: VolatilityBandId } {
+  // Determine which percentile range the volatility falls into
+  let band: VolatilityBandId;
+  let baseScore: number;
+  
+  if (volatility <= percentiles.p20) {
+    band = 'cold';
+    // Map to 0-20 range: linear interpolation within cold band
+    const ratio = percentiles.p20 > 0 ? volatility / percentiles.p20 : 0;
+    baseScore = Math.round(ratio * 20);
+  } else if (volatility <= percentiles.p40) {
+    band = 'mild';
+    // Map to 20-40 range
+    const ratio = percentiles.p40 > percentiles.p20 
+      ? (volatility - percentiles.p20) / (percentiles.p40 - percentiles.p20)
+      : 0.5;
+    baseScore = Math.round(20 + ratio * 20);
+  } else if (volatility <= percentiles.p60) {
+    band = 'warm';
+    // Map to 40-60 range
+    const ratio = percentiles.p60 > percentiles.p40
+      ? (volatility - percentiles.p40) / (percentiles.p60 - percentiles.p40)
+      : 0.5;
+    baseScore = Math.round(40 + ratio * 20);
+  } else if (volatility <= percentiles.p80) {
+    band = 'hot';
+    // Map to 60-80 range
+    const ratio = percentiles.p80 > percentiles.p60
+      ? (volatility - percentiles.p60) / (percentiles.p80 - percentiles.p60)
+      : 0.5;
+    baseScore = Math.round(60 + ratio * 20);
+  } else {
+    band = 'very_hot';
+    // Map to 80-100 range
+    // For very_hot, we need max volatility to map to 100
+    // Use a reasonable max (e.g., 2x the 80th percentile or 1.0, whichever is smaller)
+    const maxVol = Math.min(1.0, percentiles.p80 * 2 || 1.0);
+    const ratio = maxVol > percentiles.p80
+      ? (volatility - percentiles.p80) / (maxVol - percentiles.p80)
+      : 1.0;
+    baseScore = Math.round(80 + Math.min(ratio, 1.0) * 20);
+  }
+  
+  // Apply soft category-based adjustments (not hard overrides)
+  let adjustedScore = baseScore;
+  
+  if (classification.categoryPath.includes('Cash')) {
+    // Cash should be in cold band, but allow slight adjustment
+    adjustedScore = Math.min(adjustedScore, 15);
+    band = 'cold';
   } else if (classification.categoryPath.includes('Fixed Income')) {
-    score = Math.min(score, 40); // Bonds are mild at most
+    // Fixed income tends to be lower volatility
+    adjustedScore = Math.min(adjustedScore, 45);
+    if (adjustedScore > 40) band = 'warm';
+    else if (adjustedScore > 20) band = 'mild';
+    else band = 'cold';
+  } else if (classification.categoryPath.includes('Private Equity')) {
+    // PE tends to be higher volatility
+    adjustedScore = Math.max(adjustedScore, 65);
+    if (adjustedScore < 80) band = 'hot';
+    else band = 'very_hot';
   }
   
-  return score;
-}
-
-function getEntropyBand(score: number): EntropyBandId {
-  if (score < 20) return 'cold';
-  if (score < 40) return 'mild';
-  if (score < 60) return 'warm';
-  if (score < 80) return 'hot';
-  return 'very_hot';
+  // Ensure score is within valid range
+  adjustedScore = Math.max(0, Math.min(100, adjustedScore));
+  
+  // Recalculate band if score was adjusted significantly
+  if (adjustedScore < 20) band = 'cold';
+  else if (adjustedScore < 40) band = 'mild';
+  else if (adjustedScore < 60) band = 'warm';
+  else if (adjustedScore < 80) band = 'hot';
+  else band = 'very_hot';
+  
+  return { score: adjustedScore, band };
 }
 
 function generateDailyDates(startDate: string, endDate: string): string[] {
@@ -161,42 +239,57 @@ function generateDailyDates(startDate: string, endDate: string): string[] {
   return dates;
 }
 
-function createNavMap(dailyChanges: DailyChange[]): Map<string, number> {
+interface NavMapData {
+  map: Map<string, number>;
+  sortedDates: string[];
+}
+
+function createNavMap(dailyChanges: DailyChange[]): NavMapData {
   // Create a map of date -> NAV for fast lookup
   const navMap = new Map<string, number>();
-  let lastNav = 0;
   
-  // Sort by date and create map, carrying forward last known NAV
+  // Sort by date and create map
   const sorted = [...dailyChanges].sort((a, b) => a.date.localeCompare(b.date));
   
   sorted.forEach(change => {
-    lastNav = change.nav;
     navMap.set(change.date, change.nav);
   });
   
-  return navMap;
+  // Return both map and sorted dates array for binary search
+  return {
+    map: navMap,
+    sortedDates: sorted.map(c => c.date)
+  };
 }
 
-function getNavForDate(navMap: Map<string, number>, targetDate: string): number {
-  // Try exact match first
-  if (navMap.has(targetDate)) {
-    return navMap.get(targetDate)!;
+function getNavForDate(navMapData: NavMapData, targetDate: string): number {
+  // Try exact match first (O(1))
+  if (navMapData.map.has(targetDate)) {
+    return navMapData.map.get(targetDate)!;
   }
   
-  // Find the most recent NAV value before the target date
-  const target = new Date(targetDate);
-  let lastNav = 0;
-  let lastDate = new Date(0);
+  // Binary search for the most recent NAV value before the target date (O(log n))
+  const sortedDates = navMapData.sortedDates;
+  let left = 0;
+  let right = sortedDates.length - 1;
+  let result = -1;
   
-  navMap.forEach((nav, dateStr) => {
-    const changeDate = new Date(dateStr);
-    if (changeDate <= target && changeDate >= lastDate) {
-      lastNav = nav;
-      lastDate = changeDate;
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    if (sortedDates[mid] <= targetDate) {
+      result = mid;
+      left = mid + 1;
+    } else {
+      right = mid - 1;
     }
-  });
+  }
   
-  return lastNav;
+  // If we found a date <= targetDate, return its NAV
+  if (result >= 0) {
+    return navMapData.map.get(sortedDates[result]) || 0;
+  }
+  
+  return 0;
 }
 
 export function transformClientData(rawData: RawAssetData[]): {
@@ -284,7 +377,7 @@ export function transformClientData(rawData: RawAssetData[]): {
   // Sample dates to improve performance - show every Nth day instead of every day
   // This reduces data points significantly while maintaining good granularity
   // With ~2500 days from 2019-2025, sampling every 3rd day gives ~833 days (66% reduction)
-  const SAMPLE_INTERVAL = 3; // Show every 3rd day (can be adjusted: 1=every day, 2=every other day, 3=every 3rd day, etc.)
+  const SAMPLE_INTERVAL = 1; // Show every day (can be adjusted: 1=every day, 2=every other day, 3=every 3rd day, etc.)
   if (SAMPLE_INTERVAL > 1 && dailyDates.length > 1000) {
     const originalLength = dailyDates.length;
     dailyDates = dailyDates.filter((_, index) => index % SAMPLE_INTERVAL === 0);
@@ -293,25 +386,58 @@ export function transformClientData(rawData: RawAssetData[]): {
   
   console.log('📅 Daily dates range:', dailyDates[0], 'to', dailyDates[dailyDates.length - 1], `(${dailyDates.length} days)`);
   
-  // Generate assets with classification
+  // Step 1: Collect all volatilities for percentile calculation
+  const volatilities: number[] = [];
+  assetMap.forEach((data) => {
+    volatilities.push(data.volatility);
+  });
+  
+  // Step 2: Calculate volatility percentiles for clustering
+  const volatilityPercentiles = calculateVolatilityPercentiles(volatilities);
+  console.log('📊 Volatility percentiles:', {
+    p20: volatilityPercentiles.p20.toFixed(4),
+    p40: volatilityPercentiles.p40.toFixed(4),
+    p60: volatilityPercentiles.p60.toFixed(4),
+    p80: volatilityPercentiles.p80.toFixed(4),
+    min: Math.min(...volatilities).toFixed(4),
+    max: Math.max(...volatilities).toFixed(4),
+  });
+  
+  // Step 3: Generate assets with classification and percentile-based volatility
   const assets: Asset[] = [];
   let assetIdCounter = 1;
   
   assetMap.forEach((data, assetName) => {
     const hasInterestRate = typeof data.interestRate === 'number' && data.interestRate > 0;
     const classification = classifyAsset(assetName, data.volatility, hasInterestRate);
-    const entropyScore = calculateEntropyScore(data.volatility, classification);
-    const entropyBand = getEntropyBand(entropyScore);
+    const { score: volatilityScore, band: volatilityBand } = calculateVolatilityFromPercentiles(
+      data.volatility,
+      volatilityPercentiles,
+      classification
+    );
     
     assets.push({
       id: `a${assetIdCounter++}`,
       name: assetName,
       categoryPath: classification.categoryPath,
       isLiquid: classification.isLiquid,
-      entropyBand,
-      entropyScore
+      volatilityBand,
+      volatilityScore
     });
   });
+  
+  // Log volatility band distribution
+  const bandCounts: Record<VolatilityBandId, number> = {
+    cold: 0,
+    mild: 0,
+    warm: 0,
+    hot: 0,
+    very_hot: 0,
+  };
+  assets.forEach(asset => {
+    bandCounts[asset.volatilityBand]++;
+  });
+  console.log('📈 Volatility band distribution:', bandCounts);
   
   // Generate KPI data using actual daily NAV values
   const kpiData: AssetKpiPoint[] = [];
@@ -319,14 +445,14 @@ export function transformClientData(rawData: RawAssetData[]): {
   
   // Track initial NAV for each asset (first NAV value from 2019)
   const assetInitialNav = new Map<string, number>();
-  const assetNavMaps = new Map<string, Map<string, number>>();
+  const assetNavMaps = new Map<string, NavMapData>();
   
   assets.forEach(asset => {
     const rawAsset = assetMap.get(asset.name)!;
     
-    // Create NAV map for fast lookup
-    const navMap = createNavMap(rawAsset.dailyChanges);
-    assetNavMaps.set(asset.id, navMap);
+    // Create NAV map for fast lookup (with sorted dates for binary search)
+    const navMapData = createNavMap(rawAsset.dailyChanges);
+    assetNavMaps.set(asset.id, navMapData);
     
     // Find initial NAV (first NAV value from 2019)
     if (rawAsset.dailyChanges.length > 0) {
@@ -338,32 +464,40 @@ export function transformClientData(rawData: RawAssetData[]): {
   // Optimize: Only generate KPI data for assets that have data on the sampled dates
   assets.forEach(asset => {
     const rawAsset = assetMap.get(asset.name)!;
-    const navMap = assetNavMaps.get(asset.id)!;
+    const navMapData = assetNavMaps.get(asset.id)!;
     const initialNav = assetInitialNav.get(asset.id) || 0;
     
     // Pre-calculate values that don't change per date
     const totalProfit = rawAsset.totalProfit;
+    const dateCount = dailyDates.length;
+    const invDateCount = 1 / dateCount; // Pre-calculate division
+    
+    // Pre-allocate array for better performance (5 KPIs per date)
+    const assetKpiData: AssetKpiPoint[] = [];
+    assetKpiData.length = dateCount * 5;
+    let kpiIndex = 0;
     
     dailyDates.forEach((date, idx) => {
-      // Get NAV for this date from daily_changes
-      const nav = getNavForDate(navMap, date);
+      // Get NAV for this date from daily_changes (now using optimized binary search)
+      const nav = getNavForDate(navMapData, date);
       
       // Calculate all KPIs for this date (pre-calculate to avoid repeated calculations)
+      const navValue = Math.max(0, nav);
       const pl = nav - initialNav;
       const twr = initialNav > 0 ? ((nav / initialNav - 1) * 100) : 0;
-      const progress = idx / dailyDates.length;
+      const progress = idx * invDateCount; // Use multiplication instead of division
       const cf = totalProfit * progress;
-      const navValue = Math.max(0, nav);
       
       // Push all KPIs at once (more efficient than individual pushes)
-      kpiData.push(
-        { date, assetId: asset.id, kpi: 'nav', value: navValue },
-        { date, assetId: asset.id, kpi: 'pl', value: pl },
-        { date, assetId: asset.id, kpi: 'twr', value: twr },
-        { date, assetId: asset.id, kpi: 'quoted_alloc', value: navValue },
-        { date, assetId: asset.id, kpi: 'cf', value: cf }
-      );
+      assetKpiData[kpiIndex++] = { date, assetId: asset.id, kpi: 'nav', value: navValue };
+      assetKpiData[kpiIndex++] = { date, assetId: asset.id, kpi: 'pl', value: pl };
+      assetKpiData[kpiIndex++] = { date, assetId: asset.id, kpi: 'twr', value: twr };
+      assetKpiData[kpiIndex++] = { date, assetId: asset.id, kpi: 'quoted_alloc', value: navValue };
+      assetKpiData[kpiIndex++] = { date, assetId: asset.id, kpi: 'cf', value: cf };
     });
+    
+    // Add all KPIs for this asset at once
+    kpiData.push(...assetKpiData);
   });
   
   console.log('✅ Transformation complete:', {

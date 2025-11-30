@@ -1,0 +1,550 @@
+import { useEffect, useRef } from 'react';
+import * as d3 from 'd3';
+import { StackedData } from '@/lib/aggregation';
+import { VolatilityBandId, Signal, RatePoint } from '@/data/mockData';
+
+interface VolatilityRiverProps {
+  data: StackedData[];
+  currentDateIndex: number;
+  onBandClick: (band: VolatilityBandId | null) => void;
+  selectedBand: VolatilityBandId | null;
+  signals: Signal[];
+  onSignalClick: (signalId: string) => void;
+  selectedSignal: string | null;
+  showFedRate: boolean;
+  fedRates: RatePoint[];
+}
+
+// Technocratic color palette - blues, cyans, teals
+const BAND_COLORS: Record<VolatilityBandId, { base: string; light: string; dark: string }> = {
+  cold: { base: '#0EA5E9', light: '#38BDF8', dark: '#0284C7' },      // Sky blue
+  mild: { base: '#06B6D4', light: '#22D3EE', dark: '#0891B2' },      // Cyan
+  warm: { base: '#14B8A6', light: '#5EEAD4', dark: '#0D9488' },     // Teal
+  hot: { base: '#8B5CF6', light: '#A78BFA', dark: '#7C3AED' },      // Violet
+  very_hot: { base: '#EC4899', light: '#F472B6', dark: '#DB2777' }, // Pink/Magenta
+};
+
+const BAND_ORDER: VolatilityBandId[] = ['cold', 'mild', 'warm', 'hot', 'very_hot'];
+
+export function VolatilityRiver({
+  data,
+  currentDateIndex,
+  onBandClick,
+  selectedBand,
+  signals,
+  onSignalClick,
+  selectedSignal,
+  showFedRate,
+  fedRates,
+}: VolatilityRiverProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const zoomTransformRef = useRef<d3.ZoomTransform | null>(null);
+
+  useEffect(() => {
+    if (!svgRef.current || !containerRef.current || data.length === 0) return;
+
+    const container = containerRef.current;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const margin = { top: 40, right: 60, bottom: 100, left: 60 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    // Clear previous content
+    d3.select(svgRef.current).selectAll('*').remove();
+
+    const svg = d3.select(svgRef.current)
+      .attr('width', width)
+      .attr('height', height);
+
+    const g = svg.append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Parse dates and create time scale with caching
+    const dateCache = new Map<string, Date>();
+    const parseDate = (dateStr: string): Date => {
+      // Check cache first
+      if (dateCache.has(dateStr)) {
+        return dateCache.get(dateStr)!;
+      }
+      // Handle both YYYY-MM-DD and YYYY-MM formats
+      let parsed: Date;
+      if (dateStr.length === 7) {
+        parsed = d3.timeParse('%Y-%m')(dateStr) || new Date(dateStr);
+      } else {
+        parsed = d3.timeParse('%Y-%m-%d')(dateStr) || new Date(dateStr);
+      }
+      dateCache.set(dateStr, parsed);
+      return parsed;
+    };
+
+    // Pre-parse all dates once and cache them
+    const dates = data.map(d => parseDate(d.date));
+    const dateExtent = d3.extent(dates) as [Date, Date];
+    
+    // Create date-to-index map for O(1) lookups
+    const dateToIndexMap = new Map<string, number>();
+    data.forEach((d, i) => {
+      dateToIndexMap.set(d.date, i);
+    });
+    
+    // Base time scale (full domain)
+    const xScaleBase = d3.scaleTime()
+      .domain(dateExtent)
+      .range([0, innerWidth]);
+
+    // Create zoomable scale
+    const xScale = zoomTransformRef.current 
+      ? zoomTransformRef.current.rescaleX(xScaleBase)
+      : xScaleBase.copy();
+
+    const maxValue = d3.max(data, d => d.total) || 1;
+    const yScale = d3.scaleLinear()
+      .domain([0, maxValue])
+      .range([innerHeight, 0])
+      .nice();
+
+    // Create gradient definitions for technocratic gradient fills
+    const defs = svg.append('defs');
+    BAND_ORDER.forEach((band) => {
+      const colors = BAND_COLORS[band];
+      
+      // Vertical gradient: dark at top, base in middle, light at bottom with fade
+      const gradient = defs.append('linearGradient')
+        .attr('id', `gradient-${band}`)
+        .attr('x1', '0%')
+        .attr('y1', '0%')
+        .attr('x2', '0%')
+        .attr('y2', '100%');
+      
+      // Top: darker shade (20% opacity)
+      gradient.append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', colors.dark)
+        .attr('stop-opacity', 0.8);
+      
+      // Upper middle: base color (full opacity)
+      gradient.append('stop')
+        .attr('offset', '30%')
+        .attr('stop-color', colors.base)
+        .attr('stop-opacity', 0.9);
+      
+      // Lower middle: lighter shade (60% opacity)
+      gradient.append('stop')
+        .attr('offset', '70%')
+        .attr('stop-color', colors.light)
+        .attr('stop-opacity', 0.6);
+      
+      // Bottom: fade to transparent
+      gradient.append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', colors.light)
+        .attr('stop-opacity', 0.2);
+    });
+
+    // Stack generator
+    const stack = d3.stack<StackedData>()
+      .keys(BAND_ORDER)
+      .order(d3.stackOrderNone)
+      .offset(d3.stackOffsetNone);
+
+    const series = stack(data);
+
+    // Area generator with smooth curves - use cached dates for x position
+    const area = d3.area<d3.SeriesPoint<StackedData>>()
+      .x((d, i) => {
+        // Use pre-parsed dates array instead of parsing again
+        return xScale(dates[i]);
+      })
+      .y0(d => yScale(d[0]))
+      .y1(d => yScale(d[1]))
+      .curve(d3.curveCatmullRom.alpha(0.5));
+
+    // Draw areas with technocratic gradients
+    const bands = g.append('g')
+      .attr('class', 'bands')
+      .selectAll('path')
+      .data(series)
+      .join('path')
+      .attr('fill', d => `url(#gradient-${d.key})`)
+      .attr('d', area)
+      .attr('opacity', d => selectedBand === null || selectedBand === d.key ? 0.9 : 0.35)
+      .attr('stroke', d => {
+        const colors = BAND_COLORS[d.key as VolatilityBandId];
+        return selectedBand === d.key ? '#fff' : colors.base;
+      })
+      .attr('stroke-width', d => selectedBand === d.key ? 2.5 : 1)
+      .attr('stroke-opacity', d => selectedBand === d.key ? 1 : 0.4)
+      .style('cursor', 'pointer')
+      .style('transition', 'opacity 0.3s, stroke-width 0.3s')
+      .on('click', (event, d) => {
+        event.stopPropagation();
+        onBandClick(d.key as VolatilityBandId);
+      })
+      .on('mouseenter', function(event, d) {
+        if (selectedBand === null) {
+          d3.select(this)
+            .attr('opacity', 1)
+            .attr('stroke-opacity', 0.6);
+        }
+      })
+      .on('mouseleave', function(event, d) {
+        if (selectedBand === null || selectedBand !== d.key) {
+          d3.select(this)
+            .attr('opacity', selectedBand === null ? 0.9 : 0.35)
+            .attr('stroke-opacity', selectedBand === null ? 0.4 : 0.4);
+        }
+      });
+
+    // Dynamic x-axis formatter based on zoom level
+    const getXAxisFormat = (scale: d3.ScaleTime<number, number>) => {
+      const domain = scale.domain();
+      const range = domain[1].getTime() - domain[0].getTime();
+      const days = range / (1000 * 60 * 60 * 24);
+      
+      if (days <= 60) {
+        // Show days when zoomed in
+        return d3.timeFormat('%b %d');
+      } else if (days <= 365) {
+        // Show months when medium zoom
+        return d3.timeFormat('%b %Y');
+      } else {
+        // Show years when zoomed out
+        return d3.timeFormat('%Y');
+      }
+    };
+
+    // X-axis with dynamic formatting
+    const xAxisGroup = g.append('g')
+      .attr('class', 'x-axis')
+      .attr('transform', `translate(0,${innerHeight})`);
+
+    const updateXAxis = (scale: d3.ScaleTime<number, number>) => {
+      const format = getXAxisFormat(scale);
+      const domain = scale.domain();
+      const range = domain[1].getTime() - domain[0].getTime();
+      const days = range / (1000 * 60 * 60 * 24);
+      
+      // Adaptive tick count based on zoom level and width
+      const tickCount = days <= 60 
+        ? Math.min(innerWidth / 60, 20) // More ticks when zoomed in
+        : Math.min(innerWidth / 100, 12); // Fewer ticks when zoomed out
+      
+      const xAxis = d3.axisBottom(scale)
+        .ticks(tickCount)
+        .tickFormat(format);
+
+      xAxisGroup
+        .call(xAxis)
+        .attr('color', '#9CA3AF')
+        .selectAll('text')
+        .attr('font-family', 'IBM Plex Mono, monospace')
+        .attr('font-size', '12px')
+        .attr('transform', 'rotate(-45)')
+        .style('text-anchor', 'end')
+        .attr('dx', '-0.5em')
+        .attr('dy', '0.5em');
+    };
+
+    updateXAxis(xScale);
+
+    const yAxis = d3.axisLeft(yScale)
+      .ticks(6)
+      .tickFormat(d => d3.format('.2s')(d as number));
+
+    g.append('g')
+      .attr('class', 'y-axis')
+      .call(yAxis)
+      .attr('color', '#9CA3AF')
+      .selectAll('text')
+      .attr('font-family', 'IBM Plex Mono, monospace')
+      .attr('font-size', '12px');
+
+    // Current date cursor - use pre-parsed date
+    const currentDate = dates[currentDateIndex] || dates[0];
+    g.append('line')
+      .attr('class', 'current-date-cursor')
+      .attr('x1', xScale(currentDate))
+      .attr('x2', xScale(currentDate))
+      .attr('y1', 0)
+      .attr('y2', innerHeight)
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 2)
+      .attr('stroke-dasharray', '5,5')
+      .attr('opacity', 0.8);
+
+    // Fed Funds Rate - pre-compute valid rate points for use in zoom handler
+    let validRatePoints: (RatePoint & { date: Date; dateIndex: number })[] = [];
+    if (showFedRate && fedRates.length > 0) {
+      // Create a Map for efficient date lookup: key = date prefix (YYYY-MM)
+      const dateIndexMap = new Map<string, number>();
+      data.forEach((item, index) => {
+        const datePrefix = item.date.substring(0, 7); // Extract YYYY-MM
+        if (!dateIndexMap.has(datePrefix)) {
+          dateIndexMap.set(datePrefix, index);
+        }
+      });
+
+      // Filter rate points to only include those with valid date matches
+      // Use pre-parsed dates from cache
+      validRatePoints = fedRates
+        .map(rate => {
+          const dateIndex = dateIndexMap.get(rate.date);
+          if (dateIndex !== undefined) {
+            const date = dates[dateIndex]; // Use pre-parsed date
+            return { ...rate, date, dateIndex };
+          }
+          return null;
+        })
+        .filter((point): point is RatePoint & { date: Date; dateIndex: number } => point !== null);
+
+      if (validRatePoints.length > 0) {
+        const rateScale = d3.scaleLinear()
+          .domain([0, d3.max(validRatePoints, r => r.rate) || 6])
+          .range([innerHeight, 0]);
+
+        const rateLine = d3.line<RatePoint & { date: Date; dateIndex: number }>()
+          .x(d => xScale(d.date))
+          .y(d => rateScale(d.rate))
+          .curve(d3.curveMonotoneX)
+          .defined(() => true);
+
+        g.append('path')
+          .attr('class', 'rate-line')
+          .datum(validRatePoints)
+          .attr('fill', 'none')
+          .attr('stroke', '#10B981')
+          .attr('stroke-width', 2)
+          .attr('d', rateLine)
+          .attr('opacity', 0.9);
+
+        g.selectAll('.rate-dot')
+          .data(validRatePoints)
+          .join('circle')
+          .attr('class', 'rate-dot')
+          .attr('cx', d => xScale(d.date))
+          .attr('cy', d => rateScale(d.rate))
+          .attr('r', 3)
+          .attr('fill', '#10B981')
+          .attr('stroke', '#fff')
+          .attr('stroke-width', 1);
+
+        // Secondary Y axis for rate
+        const rateAxis = d3.axisRight(rateScale)
+          .ticks(4)
+          .tickFormat(d => `${d}%`);
+
+        g.append('g')
+          .attr('class', 'rate-axis')
+          .attr('transform', `translate(${innerWidth},0)`)
+          .call(rateAxis)
+          .attr('color', '#10B981')
+          .selectAll('text')
+          .attr('font-family', 'IBM Plex Mono, monospace')
+          .attr('font-size', '11px');
+      }
+    }
+
+    // Signal markers - pre-compute signal positions for better performance
+    const signalGroup = g.append('g')
+      .attr('class', 'signal-markers')
+      .attr('transform', `translate(0,${innerHeight + 10})`);
+
+    const SIGNAL_COLORS: Record<string, string> = {
+      macro: '#F59E0B',
+      geopolitical: '#EF4444',
+      rates: '#10B981',
+      custom: '#8B5CF6',
+    };
+
+    // Pre-compute signal positions using Map lookups instead of find()
+    const signalPositions = signals.map(signal => {
+      // Try exact date match first (O(1))
+      const exactIndex = dateToIndexMap.get(signal.date);
+      if (exactIndex !== undefined) {
+        return { signal, x: xScale(dates[exactIndex]), valid: true };
+      }
+      
+      // Try prefix match (for YYYY-MM format signals matching YYYY-MM-DD data)
+      // Find first data point that starts with signal date
+      let matchedIndex = -1;
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].date.startsWith(signal.date) || signal.date.startsWith(data[i].date)) {
+          matchedIndex = i;
+          break;
+        }
+      }
+      
+      if (matchedIndex >= 0) {
+        return { signal, x: xScale(dates[matchedIndex]), valid: true };
+      }
+      
+      return { signal, x: 0, valid: false };
+    });
+
+    signalGroup.selectAll('.signal-marker')
+      .data(signalPositions)
+      .join('g')
+      .attr('class', 'signal-marker')
+      .attr('transform', d => d.valid ? `translate(${d.x},0)` : `translate(0,0)`)
+      .style('cursor', 'pointer')
+      .on('click', (event, d) => {
+        event.stopPropagation();
+        onSignalClick(d.signal.id);
+      })
+      .each(function(d) {
+        if (!d.valid) return; // Skip invalid signals
+        
+        const group = d3.select(this);
+        const isSelected = selectedSignal === d.signal.id;
+        const color = SIGNAL_COLORS[d.signal.type];
+        
+        group.append('circle')
+          .attr('r', isSelected ? 6 : 4)
+          .attr('fill', color)
+          .attr('stroke', isSelected ? '#fff' : 'none')
+          .attr('stroke-width', 2);
+
+        group.append('line')
+          .attr('x1', 0)
+          .attr('x2', 0)
+          .attr('y1', -10)
+          .attr('y2', -(innerHeight + 10))
+          .attr('stroke', color)
+          .attr('stroke-width', 1)
+          .attr('stroke-dasharray', '2,2')
+          .attr('opacity', isSelected ? 0.5 : 0.2);
+      });
+
+    // Zoom behavior with constraints
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 20]) // Allow more zoom range: 0.5x (zoom out) to 20x (zoom in)
+      .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
+      .wheelDelta((event) => {
+        // Reduce wheel sensitivity - make scrolling 4x less aggressive for smoother control
+        // Default d3 behavior: -event.deltaY * (deltaMode === 1 ? 0.05 : deltaMode === 2 ? 1 : 0.002)
+        const defaultDelta = -event.deltaY * (event.deltaMode === 1 ? 0.05 : event.deltaMode === 2 ? 1 : 0.002);
+        return defaultDelta / 4; // Divide by 4 to reduce sensitivity
+      })
+      .filter((event) => {
+        // Allow zoom on wheel, but prevent it on touchpad pinch gestures that are too fast
+        if (event.type === 'wheel') {
+          return !event.ctrlKey; // Let browser handle ctrl+wheel for accessibility
+        }
+        return true;
+      })
+      .constrain((transform, extent) => {
+        // Custom constraint to prevent zooming/panning beyond reasonable bounds
+        // This ensures we don't pan outside the data range on the x-axis
+        const [x0, y0] = extent[0];
+        const [x1, y1] = extent[1];
+        const extentWidth = x1 - x0;
+        const extentHeight = y1 - y0;
+        
+        // Constrain scale to the defined extent
+        const scale = Math.max(0.5, Math.min(20, transform.k));
+        
+        // Constrain x translation to prevent panning beyond data bounds
+        // When zoomed in, we can pan but not beyond the original extent boundaries
+        const maxTx = x1 - extentWidth * scale; // Rightmost allowed position
+        const minTx = x0 - extentWidth * (scale - 1); // Leftmost allowed position
+        const tx = Math.max(minTx, Math.min(maxTx, transform.x));
+        
+        // For y-axis: prevent vertical panning (keep y at 0)
+        // This keeps the chart vertically centered
+        const ty = 0;
+        
+        return d3.zoomIdentity.translate(tx, ty).scale(scale);
+      })
+      .on('zoom', (event) => {
+        const newXScale = event.transform.rescaleX(xScaleBase);
+        zoomTransformRef.current = event.transform;
+        
+        // Update areas - use pre-parsed dates array
+        const updatedArea = d3.area<d3.SeriesPoint<StackedData>>()
+          .x((d, i) => {
+            // Use pre-parsed dates instead of parsing again
+            return newXScale(dates[i]);
+          })
+          .y0(d => yScale(d[0]))
+          .y1(d => yScale(d[1]))
+          .curve(d3.curveCatmullRom.alpha(0.5));
+
+        bands.attr('d', updatedArea);
+
+        // Update x-axis
+        updateXAxis(newXScale);
+
+        // Update current date cursor
+        g.select('.current-date-cursor')
+          .attr('x1', newXScale(currentDate))
+          .attr('x2', newXScale(currentDate));
+
+        // Update Fed rate line and dots
+        if (showFedRate && fedRates.length > 0 && validRatePoints.length > 0) {
+          // Pre-compute rate scale once
+          const maxRate = d3.max(fedRates, r => r.rate) || 6;
+          const rateScale = d3.scaleLinear()
+            .domain([0, maxRate])
+            .range([innerHeight, 0]);
+          
+          const rateLine = d3.line<RatePoint & { date: Date; dateIndex: number }>()
+            .x(d => newXScale(d.date))
+            .y(d => rateScale(d.rate))
+            .curve(d3.curveMonotoneX);
+
+          g.select('.rate-line').attr('d', rateLine);
+          
+          g.selectAll<SVGCircleElement, RatePoint & { date: Date; dateIndex: number }>('.rate-dot')
+            .attr('cx', d => newXScale(d.date));
+        }
+
+        // Update signal markers - use pre-computed positions
+        signalGroup.selectAll<SVGGElement, { signal: Signal; x: number; valid: boolean }>('.signal-marker')
+          .attr('transform', d => {
+            if (!d.valid) return `translate(0,0)`;
+            // Use cached date from pre-computed positions
+            const exactIndex = dateToIndexMap.get(d.signal.date);
+            if (exactIndex !== undefined) {
+              return `translate(${newXScale(dates[exactIndex])},0)`;
+            }
+            // Fallback: parse date if not found in cache
+            const signalDate = parseDate(d.signal.date);
+            if (signalDate >= dateExtent[0] && signalDate <= dateExtent[1]) {
+              return `translate(${newXScale(signalDate)},0)`;
+            }
+            return `translate(0,0)`;
+          });
+      });
+
+    svg.call(zoom);
+
+    // Reapply zoom transform if it exists (preserve zoom state across re-renders)
+    if (zoomTransformRef.current) {
+      svg.call(zoom.transform, zoomTransformRef.current);
+    }
+
+    // Add double-click to reset zoom
+    svg.on('dblclick.zoom', () => {
+      zoomTransformRef.current = null;
+      svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+    });
+
+    // Click outside to deselect
+    svg.on('click', (event) => {
+      // Only deselect if clicking on the background, not on elements
+      if ((event.target as Element).tagName === 'svg' || (event.target as Element).tagName === 'rect') {
+        onBandClick(null);
+        onSignalClick('');
+      }
+    });
+
+  }, [data, currentDateIndex, selectedBand, signals, selectedSignal, showFedRate, fedRates, onBandClick, onSignalClick]);
+
+  return (
+    <div ref={containerRef} className="flex-1 bg-chart-background">
+      <svg ref={svgRef} className="w-full h-full" />
+    </div>
+  );
+}

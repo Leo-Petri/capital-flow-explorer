@@ -1,5 +1,5 @@
-import { Asset, EntropyBandId, Signal, KpiId } from '@/data/mockData';
-import { ENTROPY_BAND_INFO, getBandStats, getAssetsInBand, getAssetKpiSeries } from '@/lib/aggregation';
+import { Asset, VolatilityBandId, Signal, KpiId } from '@/data/mockData';
+import { VOLATILITY_BAND_INFO, getBandStats, getAssetsInBand, getAssetKpiSeries } from '@/lib/aggregation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,10 +7,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { X, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface InspectorPanelProps {
-  selectedBand: EntropyBandId | null;
+  selectedBand: VolatilityBandId | null;
   selectedAsset: Asset | null;
   selectedSignal: Signal | null;
-  assets: Asset[];
+  assets: Asset[]; // Filtered assets for display
+  allAssets?: Asset[]; // All assets for stats calculation (optional, falls back to assets)
   currentDate: string;
   selectedKpi: KpiId;
   onSelectAsset: (asset: Asset | null) => void;
@@ -19,12 +20,12 @@ interface InspectorPanelProps {
   assetKpiData: any[];
 }
 
-const BAND_COLORS: Record<EntropyBandId, string> = {
-  cold: 'bg-entropy-cold',
-  mild: 'bg-entropy-mild',
-  warm: 'bg-entropy-warm',
-  hot: 'bg-entropy-hot',
-  very_hot: 'bg-entropy-very-hot',
+const BAND_COLORS: Record<VolatilityBandId, string> = {
+  cold: 'bg-volatility-cold',
+  mild: 'bg-volatility-mild',
+  warm: 'bg-volatility-warm',
+  hot: 'bg-volatility-hot',
+  very_hot: 'bg-volatility-very-hot',
 };
 
 export function InspectorPanel({
@@ -32,6 +33,7 @@ export function InspectorPanel({
   selectedAsset,
   selectedSignal,
   assets,
+  allAssets,
   currentDate,
   selectedKpi,
   onSelectAsset,
@@ -39,11 +41,12 @@ export function InspectorPanel({
   monthlyDates,
   assetKpiData,
 }: InspectorPanelProps) {
+
   if (!selectedBand && !selectedAsset && !selectedSignal) {
     return (
       <div className="w-96 bg-card border-l border-border p-6">
         <div className="text-center text-muted-foreground space-y-2">
-          <p className="text-sm">Click on an entropy band, asset, or signal to inspect details.</p>
+          <p className="text-sm">Click on a volatility band, asset, or signal to inspect details.</p>
         </div>
       </div>
     );
@@ -110,8 +113,8 @@ export function InspectorPanel({
           <div>
             <h2 className="text-xl font-bold text-foreground mb-1">{selectedAsset.name}</h2>
             <div className="flex items-center gap-2 mb-2">
-              <Badge className={BAND_COLORS[selectedAsset.entropyBand]}>
-                {ENTROPY_BAND_INFO[selectedAsset.entropyBand].name}
+              <Badge className={BAND_COLORS[selectedAsset.volatilityBand]}>
+                {VOLATILITY_BAND_INFO[selectedAsset.volatilityBand].name}
               </Badge>
               <Badge variant={selectedAsset.isLiquid ? 'default' : 'secondary'}>
                 {selectedAsset.isLiquid ? 'Liquid' : 'Illiquid'}
@@ -128,16 +131,16 @@ export function InspectorPanel({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Entropy Profile</CardTitle>
+            <CardTitle className="text-sm">Volatility Profile</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">Score</span>
-              <span className="text-sm font-mono font-semibold">{selectedAsset.entropyScore}</span>
+              <span className="text-sm font-mono font-semibold">{selectedAsset.volatilityScore}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs text-muted-foreground">Band</span>
-              <span className="text-sm">{ENTROPY_BAND_INFO[selectedAsset.entropyBand].range}</span>
+              <span className="text-sm">{VOLATILITY_BAND_INFO[selectedAsset.volatilityBand].range}</span>
             </div>
           </CardContent>
         </Card>
@@ -174,8 +177,12 @@ export function InspectorPanel({
 
   // Band Inspector
   if (selectedBand) {
-    const info = ENTROPY_BAND_INFO[selectedBand];
-    const stats = getBandStats(selectedBand, assets, assetKpiData, selectedKpi, currentDate);
+    const info = VOLATILITY_BAND_INFO[selectedBand];
+    // Use allAssets for stats to get accurate totals for the entire volatility group
+    // Fall back to assets if allAssets is not provided
+    const assetsForStats = allAssets || assets;
+    const stats = getBandStats(selectedBand, assetsForStats, assetKpiData, selectedKpi, currentDate);
+    // Use filtered assets for the display list
     const bandAssets = getAssetsInBand(assets, selectedBand);
 
     return (
@@ -187,7 +194,7 @@ export function InspectorPanel({
                 {info.name}
               </Badge>
               <h2 className="text-xl font-bold text-foreground">
-                Entropy {info.range}
+                Volatility {info.range}
               </h2>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -210,9 +217,9 @@ export function InspectorPanel({
             </Card>
             <Card>
               <CardContent className="pt-4 pb-4">
-                <div className="text-xs text-muted-foreground mb-1">Avg Entropy</div>
+                <div className="text-xs text-muted-foreground mb-1">Avg Volatility</div>
                 <div className="text-lg font-bold font-mono">
-                  {stats.avgEntropy.toFixed(1)}
+                  {stats.avgVolatility.toFixed(1)}
                 </div>
               </CardContent>
             </Card>

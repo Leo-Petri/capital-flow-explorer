@@ -1,7 +1,7 @@
-import { Asset, AssetKpiPoint, KpiId, EntropyBandId } from '@/data/mockData';
+import { Asset, AssetKpiPoint, KpiId, VolatilityBandId } from '@/data/mockData';
 
 export interface BandData {
-  band: EntropyBandId;
+  band: VolatilityBandId;
   date: string;
   value: number;
   percentage: number;
@@ -17,16 +17,25 @@ export interface StackedData {
   total: number;
 }
 
-export function aggregateByEntropyBand(
+export function aggregateByVolatilityBand(
   assets: Asset[],
   kpiData: AssetKpiPoint[],
   kpi: KpiId,
   dates: string[]
 ): StackedData[] {
+  // Create a Map for O(1) lookups: key = `${date}|${assetId}`
+  // Only include data points matching the selected KPI
+  const kpiMap = new Map<string, number>();
+  kpiData.forEach(point => {
+    if (point.kpi === kpi) {
+      kpiMap.set(`${point.date}|${point.assetId}`, point.value);
+    }
+  });
+
   const result: StackedData[] = [];
   
   dates.forEach(date => {
-    const bandTotals: Record<EntropyBandId, number> = {
+    const bandTotals: Record<VolatilityBandId, number> = {
       cold: 0,
       mild: 0,
       warm: 0,
@@ -35,12 +44,10 @@ export function aggregateByEntropyBand(
     };
     
     assets.forEach(asset => {
-      const point = kpiData.find(
-        p => p.date === date && p.assetId === asset.id && p.kpi === kpi
-      );
-      
-      if (point) {
-        bandTotals[asset.entropyBand] += point.value;
+      const key = `${date}|${asset.id}`;
+      const value = kpiMap.get(key);
+      if (value !== undefined) {
+        bandTotals[asset.volatilityBand] += value;
       }
     });
     
@@ -56,8 +63,8 @@ export function aggregateByEntropyBand(
   return result;
 }
 
-export function getAssetsInBand(assets: Asset[], band: EntropyBandId): Asset[] {
-  return assets.filter(a => a.entropyBand === band);
+export function getAssetsInBand(assets: Asset[], band: VolatilityBandId): Asset[] {
+  return assets.filter(a => a.volatilityBand === band);
 }
 
 export function getAssetKpiSeries(
@@ -66,19 +73,24 @@ export function getAssetKpiSeries(
   kpiData: AssetKpiPoint[],
   dates: string[]
 ): { date: string; value: number }[] {
-  return dates.map(date => {
-    const point = kpiData.find(
-      p => p.date === date && p.assetId === assetId && p.kpi === kpi
-    );
-    return {
-      date,
-      value: point?.value || 0,
-    };
+  // Create a Map for O(1) lookups: key = date
+  // Only process data points matching the asset and KPI
+  const valueMap = new Map<string, number>();
+  kpiData.forEach(point => {
+    if (point.assetId === assetId && point.kpi === kpi) {
+      valueMap.set(point.date, point.value);
+    }
   });
+
+  // Build result array with O(1) lookups instead of O(n) find operations
+  return dates.map(date => ({
+    date,
+    value: valueMap.get(date) || 0,
+  }));
 }
 
 export function getBandStats(
-  band: EntropyBandId,
+  band: VolatilityBandId,
   assets: Asset[],
   kpiData: AssetKpiPoint[],
   kpi: KpiId,
@@ -86,48 +98,88 @@ export function getBandStats(
 ) {
   const bandAssets = getAssetsInBand(assets, band);
   
+  // Early return if no current date or no assets
+  if (!currentDate || bandAssets.length === 0) {
+    return {
+      currentValue: 0,
+      avgVolatility: 0,
+      assetCount: bandAssets.length,
+    };
+  }
+  
+  // Create a Map for O(1) lookups: key = assetId
+  // Always use 'nav' KPI for Current Value (sum of all current NAVs)
+  const navMap = new Map<string, number>();
+  let navDataPointsFound = 0;
+  kpiData.forEach(point => {
+    if (point.kpi === 'nav' && point.date === currentDate) {
+      navMap.set(point.assetId, point.value);
+      navDataPointsFound++;
+    }
+  });
+  
+  // Use Map lookup instead of find() for O(1) access
+  // Current Value = sum of all current NAVs from assets under this volatility group
+  let matchedAssets = 0;
   const currentValue = bandAssets.reduce((sum, asset) => {
-    const point = kpiData.find(
-      p => p.date === currentDate && p.assetId === asset.id && p.kpi === kpi
-    );
-    return sum + (point?.value || 0);
+    const nav = navMap.get(asset.id);
+    if (nav !== undefined) {
+      matchedAssets++;
+      return sum + nav;
+    }
+    return sum;
   }, 0);
   
-  const avgEntropy = bandAssets.length > 0
-    ? bandAssets.reduce((sum, a) => sum + a.entropyScore, 0) / bandAssets.length
+  // Debug logging (can be removed later)
+  if (band === 'warm' && currentValue === 0 && bandAssets.length > 0) {
+    console.log('🔍 Debug getBandStats for warm band:', {
+      band,
+      currentDate,
+      bandAssetsCount: bandAssets.length,
+      navDataPointsFound,
+      matchedAssets,
+      assetIds: bandAssets.map(a => a.id).slice(0, 3),
+      sampleNavData: Array.from(navMap.entries()).slice(0, 3),
+      totalNavDataForDate: kpiData.filter(p => p.kpi === 'nav' && p.date === currentDate).length,
+    });
+  }
+  
+  // Avg Volatility = average of volatility scores for all assets in the band
+  const avgVolatility = bandAssets.length > 0
+    ? bandAssets.reduce((sum, a) => sum + a.volatilityScore, 0) / bandAssets.length
     : 0;
   
   return {
     currentValue,
-    avgEntropy,
+    avgVolatility,
     assetCount: bandAssets.length,
   };
 }
 
-export const ENTROPY_BAND_INFO: Record<EntropyBandId, { name: string; description: string; range: string }> = {
+export const VOLATILITY_BAND_INFO: Record<VolatilityBandId, { name: string; description: string; range: string }> = {
   cold: {
     name: 'Cold',
-    description: 'Minimal information entropy: cash, deposits, ultra-stable instruments with near-zero volatility.',
+    description: 'Minimal volatility: cash, deposits, ultra-stable instruments with near-zero volatility.',
     range: '0-20',
   },
   mild: {
     name: 'Mild',
-    description: 'Low entropy: investment-grade bonds, defensive equities with stable cash flows.',
+    description: 'Low volatility: investment-grade bonds, defensive equities with stable cash flows.',
     range: '20-40',
   },
   warm: {
     name: 'Warm',
-    description: 'Medium entropy: diversified equity funds, stable real assets with moderate volatility.',
+    description: 'Medium volatility: diversified equity funds, stable real assets with moderate volatility.',
     range: '40-60',
   },
   hot: {
     name: 'Hot',
-    description: 'High entropy: growth stocks, private equity, derivative strategies with elevated uncertainty.',
+    description: 'High volatility: growth stocks, private equity, derivative strategies with elevated uncertainty.',
     range: '60-80',
   },
   very_hot: {
     name: 'Very Hot',
-    description: 'Extreme entropy: crypto, frontier markets, highly speculative assets with maximum volatility.',
+    description: 'Extreme volatility: crypto, frontier markets, highly speculative assets with maximum volatility.',
     range: '80-100',
   },
 };

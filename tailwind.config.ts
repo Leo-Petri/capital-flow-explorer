@@ -47,12 +47,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        entropy: {
-          cold: "hsl(var(--entropy-cold))",
-          mild: "hsl(var(--entropy-mild))",
-          warm: "hsl(var(--entropy-warm))",
-          hot: "hsl(var(--entropy-hot))",
-          "very-hot": "hsl(var(--entropy-very-hot))",
+        volatility: {
+          cold: "hsl(var(--volatility-cold))",
+          mild: "hsl(var(--volatility-mild))",
+          warm: "hsl(var(--volatility-warm))",
+          hot: "hsl(var(--volatility-hot))",
+          "very-hot": "hsl(var(--volatility-very-hot))",
         },
         chart: {
           background: "hsl(var(--chart-background))",
