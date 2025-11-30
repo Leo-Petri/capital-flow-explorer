@@ -73,30 +73,44 @@ interface RegimeAnalysis {
 function analyzeRiskBehavior(
   stackedData: Array<{ date: string; cold: number; mild: number; warm: number; hot: number; very_hot: number; total: number }> | undefined
 ): {
-  rateCuts: RegimeAnalysis;
+  rateCuts1: RegimeAnalysis;
   zeroRates: RegimeAnalysis;
   rateHikes: RegimeAnalysis;
+  constantRates: RegimeAnalysis;
+  rateCuts2: RegimeAnalysis;
 } | null {
   if (!stackedData || stackedData.length === 0) return null;
 
-  // Define three fixed interest rate regimes
+  // Define five fixed interest rate regimes
   const regimes = [
     {
-      key: 'rateCuts' as const,
-      period: 'Rate Cuts (2019 – Early 2020)',
+      key: 'rateCuts1' as const,
+      period: 'Rate Cuts (2019-2020)',
       start: '2019-01',
       end: '2020-02',
     },
     {
       key: 'zeroRates' as const,
-      period: 'Zero Rates (2020 – 2021)',
+      period: 'Zero Rates (2020-2022)',
       start: '2020-03',
-      end: '2021-12',
+      end: '2022-01',
     },
     {
       key: 'rateHikes' as const,
-      period: 'Rate Hikes (2022 – 2025)',
-      start: '2022-01',
+      period: 'Rate Hikes (2022-2023)',
+      start: '2022-02',
+      end: '2023-06',
+    },
+    {
+      key: 'constantRates' as const,
+      period: 'Constant Rates (mid 2023 - end 2024)',
+      start: '2023-07',
+      end: '2024-12',
+    },
+    {
+      key: 'rateCuts2' as const,
+      period: 'Rate Cuts (end 2024 - 2025)',
+      start: '2025-01',
       end: '2025-12',
     },
   ];
@@ -216,7 +230,13 @@ export function InspectorPanel({
       );
     }
 
-    const regimes = [riskAnalysis.rateCuts, riskAnalysis.zeroRates, riskAnalysis.rateHikes];
+    const regimes = [
+      riskAnalysis.rateCuts1,
+      riskAnalysis.zeroRates,
+      riskAnalysis.rateHikes,
+      riskAnalysis.constantRates,
+      riskAnalysis.rateCuts2,
+    ];
 
     return (
       <div className="h-full rounded-none border-l border-[#1F2937] p-6 overflow-y-auto" style={{ backgroundColor: '#111827' }}>
