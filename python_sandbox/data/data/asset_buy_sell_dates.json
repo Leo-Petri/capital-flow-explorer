@@ -150,6 +150,21 @@
     "last_date": "2025-11-28"
   },
   {
+    "asset": "Amalfi Coast",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2018-03-01"
+      },
+      {
+        "action": "sold",
+        "date": "2025-09-23"
+      }
+    ],
+    "first_date": "2018-03-01",
+    "last_date": "2025-09-23"
+  },
+  {
     "asset": "Anheuser-Busch Inbev SA (AB INBEV ORD)",
     "transactions": [
       {
@@ -267,6 +282,21 @@
       }
     ],
     "first_date": "2024-04-01",
+    "last_date": "2025-11-28"
+  },
+  {
+    "asset": "California",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2018-11-01"
+      },
+      {
+        "action": "sold",
+        "date": "2025-11-28"
+      }
+    ],
+    "first_date": "2018-11-01",
     "last_date": "2025-11-28"
   },
   {
@@ -450,6 +480,32 @@
     "last_date": "2022-02-04"
   },
   {
+    "asset": "Chios Property",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2025-11-29"
+      }
+    ],
+    "first_date": "2025-11-29",
+    "last_date": "2025-11-29"
+  },
+  {
+    "asset": "Cologne",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2020-04-04"
+      },
+      {
+        "action": "sold",
+        "date": "2025-09-23"
+      }
+    ],
+    "first_date": "2020-04-04",
+    "last_date": "2025-09-23"
+  },
+  {
     "asset": "Company loan",
     "transactions": [
       {
@@ -458,11 +514,11 @@
       },
       {
         "action": "sold",
-        "date": "2025-10-31"
+        "date": "2025-11-30"
       }
     ],
     "first_date": "2018-01-31",
-    "last_date": "2025-10-31"
+    "last_date": "2025-11-30"
   },
   {
     "asset": "Cost Center | Custodian fees",
@@ -628,11 +684,11 @@
       },
       {
         "action": "sold",
-        "date": "2025-11-20"
+        "date": "2025-11-30"
       }
     ],
     "first_date": "2000-01-01",
-    "last_date": "2025-11-20"
+    "last_date": "2025-11-30"
   },
   {
     "asset": "Current account - GBP",
@@ -973,11 +1029,11 @@
       },
       {
         "action": "sold",
-        "date": "2025-10-31"
+        "date": "2025-11-30"
       }
     ],
     "first_date": "2017-01-01",
-    "last_date": "2025-10-31"
+    "last_date": "2025-11-30"
   },
   {
     "asset": "Fixed-term deposit VB 01.05.2020",
@@ -1130,6 +1186,21 @@
     "last_date": "2025-09-23"
   },
   {
+    "asset": "Hawaii",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2018-11-01"
+      },
+      {
+        "action": "sold",
+        "date": "2025-11-28"
+      }
+    ],
+    "first_date": "2018-11-01",
+    "last_date": "2025-11-28"
+  },
+  {
     "asset": "Headquarter",
     "transactions": [
       {
@@ -1228,11 +1299,11 @@
       },
       {
         "action": "sold",
-        "date": "2025-11-27"
+        "date": "2025-11-28"
       }
     ],
     "first_date": "2024-02-14",
-    "last_date": "2025-11-27"
+    "last_date": "2025-11-28"
   },
   {
     "asset": "Invesco EU ST 50 UCITS ETF Acc Warrant 02.2034",
@@ -1243,11 +1314,11 @@
       },
       {
         "action": "sold",
-        "date": "2025-11-27"
+        "date": "2025-11-28"
       }
     ],
     "first_date": "2024-02-14",
-    "last_date": "2025-11-27"
+    "last_date": "2025-11-28"
   },
   {
     "asset": "iShares Core S&P 500 UCITS ETF (Acc)",
@@ -1340,6 +1411,21 @@
     "last_date": "2025-09-23"
   },
   {
+    "asset": "Korosec",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2018-01-01"
+      },
+      {
+        "action": "sold",
+        "date": "2025-09-23"
+      }
+    ],
+    "first_date": "2018-01-01",
+    "last_date": "2025-09-23"
+  },
+  {
     "asset": "Kraft Heinz Co (KRAFT HEINZ ORD)",
     "transactions": [
       {
@@ -1353,6 +1439,21 @@
     ],
     "first_date": "2018-06-10",
     "last_date": "2025-11-28"
+  },
+  {
+    "asset": "Langogne",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2018-11-01"
+      },
+      {
+        "action": "sold",
+        "date": "2025-09-23"
+      }
+    ],
+    "first_date": "2018-11-01",
+    "last_date": "2025-09-23"
   },
   {
     "asset": "Lantern Structured Asset Management Limited",
@@ -1397,6 +1498,21 @@
       }
     ],
     "first_date": "2019-01-07",
+    "last_date": "2025-09-23"
+  },
+  {
+    "asset": "Luxembourg",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2018-11-01"
+      },
+      {
+        "action": "sold",
+        "date": "2025-09-23"
+      }
+    ],
+    "first_date": "2018-11-01",
     "last_date": "2025-09-23"
   },
   {
@@ -1513,11 +1629,11 @@
       },
       {
         "action": "sold",
-        "date": "2025-11-27"
+        "date": "2025-11-28"
       }
     ],
     "first_date": "2024-02-14",
-    "last_date": "2025-11-27"
+    "last_date": "2025-11-28"
   },
   {
     "asset": "NASDAQ 100 Call 12.2027 17800",
@@ -1528,11 +1644,26 @@
       },
       {
         "action": "sold",
-        "date": "2025-11-27"
+        "date": "2025-11-28"
       }
     ],
     "first_date": "2024-02-14",
-    "last_date": "2025-11-27"
+    "last_date": "2025-11-28"
+  },
+  {
+    "asset": "NC - United States of America",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2016-01-01"
+      },
+      {
+        "action": "sold",
+        "date": "2025-11-28"
+      }
+    ],
+    "first_date": "2016-01-01",
+    "last_date": "2025-11-28"
   },
   {
     "asset": "Nestle SA",
@@ -1618,11 +1749,11 @@
       },
       {
         "action": "sold",
-        "date": "2025-11-27"
+        "date": "2025-11-28"
       }
     ],
     "first_date": "2024-03-11",
-    "last_date": "2025-11-27"
+    "last_date": "2025-11-28"
   },
   {
     "asset": "Nvidia Warrant 09.2026 1300",
@@ -1633,11 +1764,11 @@
       },
       {
         "action": "sold",
-        "date": "2025-11-27"
+        "date": "2025-11-28"
       }
     ],
     "first_date": "2024-03-11",
-    "last_date": "2025-11-27"
+    "last_date": "2025-11-28"
   },
   {
     "asset": "Palantir Technologies Inc (PALANTIR TECHNOLOGIES CL A ORD)",
@@ -2120,6 +2251,21 @@
     "last_date": "2025-09-23"
   },
   {
+    "asset": "Venice",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2019-01-01"
+      },
+      {
+        "action": "sold",
+        "date": "2025-09-23"
+      }
+    ],
+    "first_date": "2019-01-01",
+    "last_date": "2025-09-23"
+  },
+  {
     "asset": "Vernet_Harbour Scene_1825",
     "transactions": [
       {
@@ -2133,6 +2279,21 @@
     ],
     "first_date": "2021-12-11",
     "last_date": "2025-09-23"
+  },
+  {
+    "asset": "Vitznau",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2018-11-01"
+      },
+      {
+        "action": "sold",
+        "date": "2025-11-28"
+      }
+    ],
+    "first_date": "2018-11-01",
+    "last_date": "2025-11-28"
   },
   {
     "asset": "Vodafone Group PLC",
@@ -2193,5 +2354,31 @@
     ],
     "first_date": "2022-01-28",
     "last_date": "2024-04-25"
+  },
+  {
+    "asset": "Zakynthos  Mansion",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2025-11-29"
+      }
+    ],
+    "first_date": "2025-11-29",
+    "last_date": "2025-11-29"
+  },
+  {
+    "asset": "Zurich",
+    "transactions": [
+      {
+        "action": "bought",
+        "date": "2018-11-01"
+      },
+      {
+        "action": "sold",
+        "date": "2025-11-28"
+      }
+    ],
+    "first_date": "2018-11-01",
+    "last_date": "2025-11-28"
   }
 ]

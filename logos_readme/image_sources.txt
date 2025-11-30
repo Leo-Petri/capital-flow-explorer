@@ -5,5 +5,3 @@ yfinance = https://finance.yahoo.com/ (30/11/2025)
 newsapi = https://newsapi.org/ (30/11/2025)
 qplix = https://www.qplix.com/de (30/11/2025)
 vercel = https://vercel.com/home (30/11/2025)
-aws = https://aws.amazon.com/de/
-lovable = https://lovable.dev/
