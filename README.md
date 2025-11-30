@@ -21,11 +21,39 @@ Open your browser and explore your capital flows.
 
 ## 2. Technical Execution
 
-Built with modern tools for speed and reliability. React and TypeScript ensure the app runs smoothly even with large datasets. Custom data processing scripts handle portfolio data, news analysis, and API connections. The code is organized for easy maintenance and future updates.
+Built with **React** and **TypeScript** for a fast, responsive experience—even with lots of data. We stand out by going beyond standard dashboards: a **Python-based structure** that collects, manipulates, and analyzes all portfolio and news data, using **real NLP models** (from Hugging Face) to classify news by sentiment, importance, and topic. Our python scripts connect to APIs, scrappes websites, and make very simple insights. Everything is set up so you can tweak, extend, or swap data sources without headaches—future-proof by design. Most importantly everything built with **open-source** tools.
 
-| Frontend                                     | Data Processing & AI                                  | Deployment                |
-|-----------------------------------------------|-------------------------------------------------------|---------------------------|
-| ![](logos_readme/ts_react.png)                  | ![](logos_readme/python.png) <br/> ![](logos_readme/hflogo.png) | ![](logos_readme/vercel.png) |
+<table>
+  <thead>
+    <tr>
+      <th style="text-align:center">
+        <div>Frontend<br/><span style="font-size:13px; font-weight:normal; color:#888;">(UI/UX)</span></div>
+      </th>
+      <th style="text-align:center">
+        <div>Data Processing &amp; AI<br/><span style="font-size:13px; font-weight:normal; color:#888;">(Automation &amp; Analytics)</span></div>
+      </th>
+      <th style="text-align:center">
+        <div>Deployment<br/><span style="font-size:13px; font-weight:normal; color:#888;">(Cloud Hosting)</span></div>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center">
+        <img src="logos_readme/ts_react.png" alt="TypeScript React" width="68" height="68"/>
+      </td>
+      <td align="center">
+        <img src="logos_readme/python.png" alt="Python" width="68" height="68" style="margin-bottom:4px"/>
+        <br/>
+        <img src="logos_readme/hflogo.png" alt="Hugging Face" width="68" height="68"/>
+      </td>
+      <td align="center">
+        <img src="logos_readme/vercel.png" alt="Vercel" width="68" height="68"/>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 
 
 ## 3. Visualization & Communication
