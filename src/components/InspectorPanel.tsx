@@ -32,11 +32,11 @@ interface InspectorPanelProps {
 }
 
 const BAND_COLORS: Record<VolatilityBandId, string> = {
-  cold: 'bg-[#0EA5E9] text-white',      // Sky blue
-  mild: 'bg-[#06B6D4] text-white',      // Cyan
-  warm: 'bg-[#F59E0B] text-white',      // Amber/Gold
-  hot: 'bg-[#F97316] text-white',       // Orange
-  very_hot: 'bg-[#DC2626] text-white',  // Red
+  cold: 'bg-[#2D5A87] text-white',        // Deep navy → soft teal
+  mild: 'bg-[#475569] text-white',        // Slate → steel blue
+  warm: 'bg-[#D97706] text-white',        // Amber → muted gold
+  hot: 'bg-[#EA580C] text-white',         // Orange-red
+  very_hot: 'bg-[#991B1B] text-white',    // Plum → crimson
 };
 
 // Helper function to get Fed rate for a given date
@@ -145,8 +145,8 @@ export function InspectorPanel({
 
   if (!selectedBand && !selectedAsset && !selectedSignal) {
     return (
-      <div className="w-96 bg-card border-l border-border p-6">
-        <div className="text-center text-muted-foreground space-y-2">
+      <div className="w-96 bg-[#111827] rounded-none border-l border-[#1F2937] p-6">
+        <div className="text-center text-[#9CA3AF] space-y-2">
           <p className="text-sm">Click on a volatility band, asset, or signal to inspect details.</p>
         </div>
       </div>
@@ -156,13 +156,13 @@ export function InspectorPanel({
   // Signal Inspector
   if (selectedSignal) {
     return (
-      <div className="h-full bg-[#15232F] rounded-lg p-6 space-y-4 overflow-y-auto border border-[rgba(255,255,255,0.05)] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+      <div className="h-full bg-[#111827] rounded-none p-6 space-y-4 overflow-y-auto border border-[#1F2937] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
         <div className="flex items-start justify-between">
           <div>
             <Badge variant="outline" className="mb-2">
               {selectedSignal.type.toUpperCase()}
             </Badge>
-            <h2 className="text-xl font-bold text-[rgba(255,255,255,0.90)]">{selectedSignal.title}</h2>
+            <h2 className="text-xl font-bold text-[#E5E7EB]">{selectedSignal.title}</h2>
             <p className="text-sm text-muted-foreground font-mono">{selectedSignal.date}</p>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose}>
@@ -213,10 +213,10 @@ export function InspectorPanel({
     const position = navSeries.find(s => s.date === currentDate)?.value || 0;
 
     return (
-      <div className="h-full bg-[#15232F] rounded-lg p-6 space-y-4 overflow-y-auto border border-[rgba(255,255,255,0.05)] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+      <div className="h-full bg-[#111827] rounded-none p-6 space-y-4 overflow-y-auto border border-[#1F2937] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-xl font-bold text-[rgba(255,255,255,0.90)] mb-1">{selectedAsset.name}</h2>
+            <h2 className="text-xl font-bold text-[#E5E7EB] mb-1">{selectedAsset.name}</h2>
             <div className="flex items-center gap-2 mb-2">
               <Badge className={BAND_COLORS[selectedAsset.volatilityBand]}>
                 {VOLATILITY_BAND_INFO[selectedAsset.volatilityBand].name}
