@@ -412,7 +412,15 @@ def main():
         json.dump(results, f, indent=2)
     
     print(f"Done! Results saved to {OUTPUT_FILE}")
-    
+
+    # Automatically update volatility values using the replace_volatility script
+    import subprocess
+    print("\nUpdating volatility values in full_asset_analysis.json using replace_volatility_in_full_analysis.py ...")
+    subprocess.run([
+        "python", "python_sandbox/data/replace_volatility_in_full_analysis.py"
+    ], check=True)
+    print("Volatility values updated in full_asset_analysis_with_new_volatility.json.")
+
     # Print summary
     print(f"\nSummary:")
     print(f"  Total assets analyzed: {len(results)}")
