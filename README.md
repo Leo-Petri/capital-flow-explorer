@@ -14,6 +14,8 @@ npm install
 npm run dev
 ```
 
+### Project structure
+
 ```
 capital-flow-explorer/
 ├── README.md
