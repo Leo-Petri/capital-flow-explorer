@@ -16,13 +16,13 @@ interface VolatilityRiverProps {
   fedRates: RatePoint[];
 }
 
-// Institutional quant-grade muted luminous palette with rebalanced opacity
+// Institutional quant-grade muted luminous palette with solid, modern opacity
 const BAND_COLORS: Record<VolatilityBandId, { base: string; light: string; dark: string; glow: string; defaultOpacity: number; selectedOpacity: number; nonSelectedOpacity: number }> = {
-  cold: { base: '#2D5A87', light: '#3D6B9A', dark: '#1E3A5F', glow: 'rgba(45,90,135,0.4)', defaultOpacity: 0.50, selectedOpacity: 0.75, nonSelectedOpacity: 0.32 },        // Deep navy → soft teal
-  mild: { base: '#475569', light: '#5A6A7F', dark: '#334155', glow: 'rgba(71,85,105,0.4)', defaultOpacity: 0.52, selectedOpacity: 0.78, nonSelectedOpacity: 0.33 },        // Slate → steel blue
-  warm: { base: '#D97706', light: '#F59E0B', dark: '#B45309', glow: 'rgba(217,119,6,0.4)', defaultOpacity: 0.48, selectedOpacity: 0.72, nonSelectedOpacity: 0.30 },       // Amber → muted gold
-  hot: { base: '#EA580C', light: '#FB923C', dark: '#C2410C', glow: 'rgba(234,88,12,0.4)', defaultOpacity: 0.50, selectedOpacity: 0.75, nonSelectedOpacity: 0.32 },        // Orange-red
-  very_hot: { base: '#991B1B', light: '#B91C1C', dark: '#7F1D1D', glow: 'rgba(153,27,27,0.4)', defaultOpacity: 0.48, selectedOpacity: 0.72, nonSelectedOpacity: 0.30 },   // Plum → crimson
+  cold: { base: '#2D5A87', light: '#3D6B9A', dark: '#1E3A5F', glow: 'rgba(45,90,135,0.4)', defaultOpacity: 0.60, selectedOpacity: 0.80, nonSelectedOpacity: 0.40 },        // Deep navy → soft teal
+  mild: { base: '#475569', light: '#5A6A7F', dark: '#334155', glow: 'rgba(71,85,105,0.4)', defaultOpacity: 0.60, selectedOpacity: 0.80, nonSelectedOpacity: 0.40 },        // Slate → steel blue
+  warm: { base: '#D97706', light: '#F59E0B', dark: '#B45309', glow: 'rgba(217,119,6,0.4)', defaultOpacity: 0.60, selectedOpacity: 0.80, nonSelectedOpacity: 0.40 },       // Amber → muted gold
+  hot: { base: '#EA580C', light: '#FB923C', dark: '#C2410C', glow: 'rgba(234,88,12,0.4)', defaultOpacity: 0.60, selectedOpacity: 0.80, nonSelectedOpacity: 0.40 },        // Orange-red
+  very_hot: { base: '#991B1B', light: '#B91C1C', dark: '#7F1D1D', glow: 'rgba(153,27,27,0.4)', defaultOpacity: 0.60, selectedOpacity: 0.80, nonSelectedOpacity: 0.40 },   // Plum → crimson
 };
 
 const BAND_ORDER: VolatilityBandId[] = ['cold', 'mild', 'warm', 'hot', 'very_hot'];
