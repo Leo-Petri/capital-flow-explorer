@@ -7,6 +7,20 @@ export interface Asset {
   isLiquid: boolean;
   volatilityBand: VolatilityBandId;
   volatilityScore: number;
+  // Additional raw data from full_asset_analysis.json
+  rawVolatility?: number; // Original volatility value from JSON
+  interestRate?: number | string; // Interest rate if applicable
+  purchasePrice?: number; // Purchase price
+  totalProfit?: number; // Total profit/loss
+  transactions?: Array<{
+    buy_date: string;
+    sell_date: string;
+    purchase_price: number;
+    selling_price: number;
+    buy_nav: number;
+    sell_nav: number;
+    profit: number;
+  }>; // Transaction details
 }
 
 export type KpiId = 'nav' | 'pl' | 'twr' | 'quoted_alloc' | 'cf';
@@ -352,8 +366,6 @@ export async function loadSignalsFromCSV(): Promise<Signal[]> {
   }
 }
 
-// Signals - will be loaded from CSV
-export let SIGNALS: Signal[] = [];
 
 // Fed Funds Rate (realistic approximation)
 export const FED_RATES: RatePoint[] = [
@@ -440,8 +452,3 @@ export async function loadClientData() {
   
   return cachedData;
 }
-
-// Export empty defaults for initial render
-export let MONTHLY_DATES: string[] = [];
-export let ASSETS: Asset[] = [];
-export let ASSET_KPI_DATA: AssetKpiPoint[] = [];

@@ -164,47 +164,59 @@ const Index = () => {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
-      <ControlsPanel
-        currentDateIndex={currentDateIndex}
-        maxDateIndex={MONTHLY_DATES.length - 1}
-        currentDate={currentDate}
-        isPlaying={isPlaying}
-        onDateIndexChange={setCurrentDateIndex}
-        onPlayPause={() => setIsPlaying(!isPlaying)}
-        filterMode={filterMode}
-        onFilterModeChange={setFilterMode}
-        selectedKpi={selectedKpi}
-        onKpiChange={setSelectedKpi}
-        showFedRate={showFedRate}
-        onShowFedRateChange={setShowFedRate}
-      />
+    <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: '#0F1A24' }}>
+      {/* Left Panel - Controls */}
+      <div className="w-80 flex-shrink-0">
+        <ControlsPanel
+          currentDateIndex={currentDateIndex}
+          maxDateIndex={MONTHLY_DATES.length - 1}
+          currentDate={currentDate}
+          isPlaying={isPlaying}
+          onDateIndexChange={setCurrentDateIndex}
+          onPlayPause={() => setIsPlaying(!isPlaying)}
+          filterMode={filterMode}
+          onFilterModeChange={setFilterMode}
+          selectedKpi={selectedKpi}
+          onKpiChange={setSelectedKpi}
+          showFedRate={showFedRate}
+          onShowFedRateChange={setShowFedRate}
+        />
+      </div>
 
-      <VolatilityRiver
-        data={stackedData}
-        currentDateIndex={currentDateIndex}
-        onBandClick={handleBandClick}
-        selectedBand={selectedBand}
-        signals={signals}
-        onSignalClick={handleSignalClick}
-        selectedSignal={selectedSignal?.id || null}
-        showFedRate={showFedRate}
-        fedRates={FED_RATES}
-      />
+      {/* Center Panel - Visualization */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full h-full bg-[#15232F] rounded-lg border border-[rgba(255,255,255,0.05)] shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-6">
+          <VolatilityRiver
+            data={stackedData}
+            currentDateIndex={currentDateIndex}
+            onBandClick={handleBandClick}
+            selectedBand={selectedBand}
+            signals={signals}
+            onSignalClick={handleSignalClick}
+            selectedSignal={selectedSignal?.id || null}
+            showFedRate={showFedRate}
+            fedRates={FED_RATES}
+          />
+        </div>
+      </div>
 
-      <InspectorPanel
-        selectedBand={selectedBand}
-        selectedAsset={selectedAsset}
-        selectedSignal={selectedSignal}
-        assets={filteredAssets}
-        allAssets={ASSETS}
-        currentDate={currentDate || MONTHLY_DATES[0] || ''}
-        selectedKpi={selectedKpi}
-        onSelectAsset={setSelectedAsset}
-        onClose={handleInspectorClose}
-        monthlyDates={MONTHLY_DATES}
-        assetKpiData={ASSET_KPI_DATA}
-      />
+      {/* Right Panel - Inspector */}
+      <div className="w-96 flex-shrink-0">
+        <InspectorPanel
+          selectedBand={selectedBand}
+          selectedAsset={selectedAsset}
+          selectedSignal={selectedSignal}
+          assets={filteredAssets}
+          allAssets={ASSETS}
+          currentDate={currentDate || MONTHLY_DATES[0] || ''}
+          selectedKpi={selectedKpi}
+          onSelectAsset={setSelectedAsset}
+          onClose={handleInspectorClose}
+          monthlyDates={MONTHLY_DATES}
+          assetKpiData={ASSET_KPI_DATA}
+          stackedData={stackedData}
+        />
+      </div>
     </div>
   );
 };

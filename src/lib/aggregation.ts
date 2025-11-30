@@ -1,12 +1,5 @@
 import { Asset, AssetKpiPoint, KpiId, VolatilityBandId } from '@/data/mockData';
 
-export interface BandData {
-  band: VolatilityBandId;
-  date: string;
-  value: number;
-  percentage: number;
-}
-
 export interface StackedData {
   date: string;
   cold: number;
@@ -111,12 +104,33 @@ export function getBandStats(
   // Always use 'nav' KPI for Current Value (sum of all current NAVs)
   const navMap = new Map<string, number>();
   let navDataPointsFound = 0;
+  
+  // First, try exact date match
   kpiData.forEach(point => {
     if (point.kpi === 'nav' && point.date === currentDate) {
       navMap.set(point.assetId, point.value);
       navDataPointsFound++;
     }
   });
+  
+  // If no exact match found, try to find the closest date (most recent <= currentDate)
+  if (navDataPointsFound === 0 && currentDate) {
+    const navDataByAsset = new Map<string, { date: string; value: number }>();
+    kpiData.forEach(point => {
+      if (point.kpi === 'nav' && point.date <= currentDate) {
+        const existing = navDataByAsset.get(point.assetId);
+        if (!existing || point.date > existing.date) {
+          navDataByAsset.set(point.assetId, { date: point.date, value: point.value });
+        }
+      }
+    });
+    
+    // Use the closest dates found
+    navDataByAsset.forEach((data, assetId) => {
+      navMap.set(assetId, data.value);
+      navDataPointsFound++;
+    });
+  }
   
   // Use Map lookup instead of find() for O(1) access
   // Current Value = sum of all current NAVs from assets under this volatility group
@@ -130,17 +144,28 @@ export function getBandStats(
     return sum;
   }, 0);
   
-  // Debug logging (can be removed later)
-  if (band === 'warm' && currentValue === 0 && bandAssets.length > 0) {
+  // Enhanced debug logging for warm band
+  if (band === 'warm') {
+    const totalNavDataForDate = kpiData.filter(p => p.kpi === 'nav' && p.date === currentDate).length;
+    const sampleDates = Array.from(new Set(kpiData.filter(p => p.kpi === 'nav').map(p => p.date))).slice(0, 5);
+    
     console.log('🔍 Debug getBandStats for warm band:', {
       band,
       currentDate,
       bandAssetsCount: bandAssets.length,
       navDataPointsFound,
       matchedAssets,
-      assetIds: bandAssets.map(a => a.id).slice(0, 3),
-      sampleNavData: Array.from(navMap.entries()).slice(0, 3),
-      totalNavDataForDate: kpiData.filter(p => p.kpi === 'nav' && p.date === currentDate).length,
+      currentValue,
+      assetIds: bandAssets.map(a => a.id).slice(0, 5),
+      assetNames: bandAssets.map(a => a.name).slice(0, 5),
+      sampleNavData: Array.from(navMap.entries()).slice(0, 5),
+      totalNavDataForDate,
+      sampleDatesInKpiData: sampleDates,
+      dateMatch: kpiData.some(p => p.kpi === 'nav' && p.date === currentDate),
+      // Check if any warm band assets have NAV data at all
+      warmAssetsWithNavData: bandAssets.filter(a => 
+        kpiData.some(p => p.kpi === 'nav' && p.assetId === a.id)
+      ).length,
     });
   }
   

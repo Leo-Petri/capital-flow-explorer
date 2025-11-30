@@ -15,13 +15,13 @@ interface VolatilityRiverProps {
   fedRates: RatePoint[];
 }
 
-// Technocratic color palette - blues, cyans, teals
+// Heat-map color palette matching volatility levels
 const BAND_COLORS: Record<VolatilityBandId, { base: string; light: string; dark: string }> = {
   cold: { base: '#0EA5E9', light: '#38BDF8', dark: '#0284C7' },      // Sky blue
   mild: { base: '#06B6D4', light: '#22D3EE', dark: '#0891B2' },      // Cyan
-  warm: { base: '#14B8A6', light: '#5EEAD4', dark: '#0D9488' },     // Teal
-  hot: { base: '#8B5CF6', light: '#A78BFA', dark: '#7C3AED' },      // Violet
-  very_hot: { base: '#EC4899', light: '#F472B6', dark: '#DB2777' }, // Pink/Magenta
+  warm: { base: '#F59E0B', light: '#FBBF24', dark: '#D97706' },      // Amber/Gold
+  hot: { base: '#F97316', light: '#FB923C', dark: '#EA580C' },       // Orange
+  very_hot: { base: '#DC2626', light: '#EF4444', dark: '#B91C1C' },  // Red
 };
 
 const BAND_ORDER: VolatilityBandId[] = ['cold', 'mild', 'warm', 'hot', 'very_hot'];
@@ -105,12 +105,28 @@ export function VolatilityRiver({
       .range([innerHeight, 0])
       .nice();
 
-    // Create gradient definitions for technocratic gradient fills
+    // QPLIX neon-blue gradient definitions - exact replication
     const defs = svg.append('defs');
+    
+    // Create modern drop shadow filter for sleek appearance
+    const filter = defs.append('filter')
+      .attr('id', 'glow')
+      .attr('x', '-50%')
+      .attr('y', '-50%')
+      .attr('width', '200%')
+      .attr('height', '200%');
+    
+    filter.append('feGaussianBlur')
+      .attr('stdDeviation', '3')
+      .attr('result', 'coloredBlur');
+    
+    const feMerge = filter.append('feMerge');
+    feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+    feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+    
     BAND_ORDER.forEach((band) => {
       const colors = BAND_COLORS[band];
-      
-      // Vertical gradient: dark at top, base in middle, light at bottom with fade
+      // Gradient: more opaque at top (near line), more transparent at bottom
       const gradient = defs.append('linearGradient')
         .attr('id', `gradient-${band}`)
         .attr('x1', '0%')
@@ -118,29 +134,23 @@ export function VolatilityRiver({
         .attr('x2', '0%')
         .attr('y2', '100%');
       
-      // Top: darker shade (20% opacity)
+      // Top (near line): more intense
       gradient.append('stop')
         .attr('offset', '0%')
-        .attr('stop-color', colors.dark)
-        .attr('stop-opacity', 0.8);
-      
-      // Upper middle: base color (full opacity)
-      gradient.append('stop')
-        .attr('offset', '30%')
         .attr('stop-color', colors.base)
-        .attr('stop-opacity', 0.9);
+        .attr('stop-opacity', 0.65);
       
-      // Lower middle: lighter shade (60% opacity)
+      // Middle: medium transparency
       gradient.append('stop')
-        .attr('offset', '70%')
-        .attr('stop-color', colors.light)
-        .attr('stop-opacity', 0.6);
+        .attr('offset', '50%')
+        .attr('stop-color', colors.base)
+        .attr('stop-opacity', 0.35);
       
-      // Bottom: fade to transparent
+      // Bottom: nearly transparent
       gradient.append('stop')
         .attr('offset', '100%')
-        .attr('stop-color', colors.light)
-        .attr('stop-opacity', 0.2);
+        .attr('stop-color', colors.base)
+        .attr('stop-opacity', 0.05);
     });
 
     // Stack generator
@@ -161,7 +171,7 @@ export function VolatilityRiver({
       .y1(d => yScale(d[1]))
       .curve(d3.curveCatmullRom.alpha(0.5));
 
-    // Draw areas with technocratic gradients
+    // QPLIX neon-blue areas with modern transparent shading
     const bands = g.append('g')
       .attr('class', 'bands')
       .selectAll('path')
@@ -169,15 +179,18 @@ export function VolatilityRiver({
       .join('path')
       .attr('fill', d => `url(#gradient-${d.key})`)
       .attr('d', area)
-      .attr('opacity', d => selectedBand === null || selectedBand === d.key ? 0.9 : 0.35)
+      .attr('opacity', d => selectedBand === null || selectedBand === d.key ? 1 : 0.25)
       .attr('stroke', d => {
-        const colors = BAND_COLORS[d.key as VolatilityBandId];
-        return selectedBand === d.key ? '#fff' : colors.base;
+        if (selectedBand === d.key) return '#ffffff';
+        return BAND_COLORS[d.key as VolatilityBandId].light;
       })
-      .attr('stroke-width', d => selectedBand === d.key ? 2.5 : 1)
-      .attr('stroke-opacity', d => selectedBand === d.key ? 1 : 0.4)
+      .attr('stroke-width', d => selectedBand === d.key ? 3 : 2.5)
+      .attr('stroke-opacity', d => selectedBand === d.key ? 1 : 0.8)
+      .attr('stroke-linejoin', 'round')
+      .attr('stroke-linecap', 'round')
+      .attr('filter', 'url(#glow)')
       .style('cursor', 'pointer')
-      .style('transition', 'opacity 0.3s, stroke-width 0.3s')
+      .style('transition', 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)')
       .on('click', (event, d) => {
         event.stopPropagation();
         onBandClick(d.key as VolatilityBandId);
@@ -186,14 +199,16 @@ export function VolatilityRiver({
         if (selectedBand === null) {
           d3.select(this)
             .attr('opacity', 1)
-            .attr('stroke-opacity', 0.6);
+            .attr('stroke-width', 3)
+            .attr('stroke-opacity', 1);
         }
       })
       .on('mouseleave', function(event, d) {
         if (selectedBand === null || selectedBand !== d.key) {
           d3.select(this)
-            .attr('opacity', selectedBand === null ? 0.9 : 0.35)
-            .attr('stroke-opacity', selectedBand === null ? 0.4 : 0.4);
+            .attr('opacity', selectedBand === null ? 1 : 0.25)
+            .attr('stroke-width', selectedBand === null ? 2.5 : 2.5)
+            .attr('stroke-opacity', selectedBand === null ? 0.8 : 0.8);
         }
       });
 
@@ -237,10 +252,13 @@ export function VolatilityRiver({
 
       xAxisGroup
         .call(xAxis)
-        .attr('color', '#9CA3AF')
+        .call(g => g.select('.domain').attr('stroke', 'rgba(255, 255, 255, 0.06)'))
+        .call(g => g.selectAll('.tick line').attr('stroke', 'rgba(255, 255, 255, 0.06)'))
         .selectAll('text')
-        .attr('font-family', 'IBM Plex Mono, monospace')
-        .attr('font-size', '12px')
+        .attr('fill', 'rgba(255, 255, 255, 0.55)')
+        .attr('font-family', 'Inter, sans-serif')
+        .attr('font-size', '10px')
+        .attr('font-weight', '400')
         .attr('transform', 'rotate(-45)')
         .style('text-anchor', 'end')
         .attr('dx', '-0.5em')
@@ -253,26 +271,57 @@ export function VolatilityRiver({
       .ticks(6)
       .tickFormat(d => d3.format('.2s')(d as number));
 
-    g.append('g')
+    // Y-axis with subtle gridlines
+    const yAxisGroup = g.append('g')
       .attr('class', 'y-axis')
       .call(yAxis)
-      .attr('color', '#9CA3AF')
+      .call(g => g.select('.domain').attr('stroke', 'rgba(255, 255, 255, 0.06)'))
+      .call(g => g.selectAll('.tick line')
+        .attr('stroke', 'rgba(255, 255, 255, 0.06)')
+        .attr('stroke-width', 1)
+        .attr('x2', innerWidth)) // Extend gridlines across chart
       .selectAll('text')
-      .attr('font-family', 'IBM Plex Mono, monospace')
-      .attr('font-size', '12px');
+      .attr('fill', 'rgba(255, 255, 255, 0.55)')
+      .attr('font-family', 'Inter, sans-serif')
+      .attr('font-size', '10px')
+      .attr('font-weight', '400');
 
-    // Current date cursor - use pre-parsed date
+    // Current date cursor with QPLIX accent color
     const currentDate = dates[currentDateIndex] || dates[0];
+    const cursorX = xScale(currentDate);
+    
     g.append('line')
       .attr('class', 'current-date-cursor')
-      .attr('x1', xScale(currentDate))
-      .attr('x2', xScale(currentDate))
+      .attr('x1', cursorX)
+      .attr('x2', cursorX)
       .attr('y1', 0)
       .attr('y2', innerHeight)
-      .attr('stroke', '#fff')
+      .attr('stroke', '#4DA3F7')
       .attr('stroke-width', 2)
-      .attr('stroke-dasharray', '5,5')
-      .attr('opacity', 0.8);
+      .attr('stroke-dasharray', '4,6')
+      .attr('opacity', 0.8)
+      .attr('filter', 'url(#glow)');
+
+    // Add triangle markers at the ends of the cursor line
+    const triangleSize = 6;
+    
+    // Top triangle (pointing down/inward)
+    g.append('polygon')
+      .attr('class', 'cursor-marker-top')
+      .attr('points', `${cursorX},${triangleSize} ${cursorX - triangleSize},0 ${cursorX + triangleSize},0`)
+      .attr('fill', 'rgba(255, 255, 255, 0.9)')
+      .attr('stroke', '#4DA3F7')
+      .attr('stroke-width', 1)
+      .attr('opacity', 0.9);
+    
+    // Bottom triangle (pointing up/inward)
+    g.append('polygon')
+      .attr('class', 'cursor-marker-bottom')
+      .attr('points', `${cursorX},${innerHeight - triangleSize} ${cursorX - triangleSize},${innerHeight} ${cursorX + triangleSize},${innerHeight}`)
+      .attr('fill', 'rgba(255, 255, 255, 0.9)')
+      .attr('stroke', '#4DA3F7')
+      .attr('stroke-width', 1)
+      .attr('opacity', 0.9);
 
     // Fed Funds Rate - pre-compute valid rate points for use in zoom handler
     let validRatePoints: (RatePoint & { date: Date; dateIndex: number })[] = [];
@@ -314,21 +363,25 @@ export function VolatilityRiver({
           .attr('class', 'rate-line')
           .datum(validRatePoints)
           .attr('fill', 'none')
-          .attr('stroke', '#10B981')
-          .attr('stroke-width', 2)
+          .attr('stroke', '#D4A017')  // Deep darker yellow/gold
+          .attr('stroke-width', 2.5)
           .attr('d', rateLine)
-          .attr('opacity', 0.9);
+          .attr('opacity', 0.85)
+          .attr('filter', 'url(#glow)');
 
+        // Glowing dots
         g.selectAll('.rate-dot')
           .data(validRatePoints)
           .join('circle')
           .attr('class', 'rate-dot')
           .attr('cx', d => xScale(d.date))
           .attr('cy', d => rateScale(d.rate))
-          .attr('r', 3)
-          .attr('fill', '#10B981')
-          .attr('stroke', '#fff')
-          .attr('stroke-width', 1);
+          .attr('r', 3.5)
+          .attr('fill', '#F4D03F')
+          .attr('stroke', '#D4A017')
+          .attr('stroke-width', 2)
+          .attr('filter', 'url(#glow)')
+          .style('box-shadow', '0px 0px 6px rgba(212,160,23,0.6)');
 
         // Secondary Y axis for rate
         const rateAxis = d3.axisRight(rateScale)
@@ -339,10 +392,13 @@ export function VolatilityRiver({
           .attr('class', 'rate-axis')
           .attr('transform', `translate(${innerWidth},0)`)
           .call(rateAxis)
-          .attr('color', '#10B981')
+          .call(g => g.select('.domain').attr('stroke', 'rgba(212, 160, 23, 0.2)'))
+          .call(g => g.selectAll('.tick line').attr('stroke', 'rgba(212, 160, 23, 0.15)'))
           .selectAll('text')
-          .attr('font-family', 'IBM Plex Mono, monospace')
-          .attr('font-size', '11px');
+          .attr('fill', '#D4A017')
+          .attr('font-family', 'Inter, sans-serif')
+          .attr('font-size', '10px')
+          .attr('font-weight', '400');
       }
     }
 
@@ -356,6 +412,9 @@ export function VolatilityRiver({
       geopolitical: '#EF4444',
       rates: '#10B981',
       custom: '#8B5CF6',
+      green: '#22C55E',   // Green for positive/good news
+      red: '#EF4444',     // Red for negative/bad news
+      gray: '#F97316',    // Orange for neutral news
     };
 
     // Pre-compute signal positions using Map lookups instead of find()
@@ -401,10 +460,12 @@ export function VolatilityRiver({
         const color = SIGNAL_COLORS[d.signal.type];
         
         group.append('circle')
-          .attr('r', isSelected ? 6 : 4)
+          .attr('r', isSelected ? 7 : 5)
           .attr('fill', color)
-          .attr('stroke', isSelected ? '#fff' : 'none')
-          .attr('stroke-width', 2);
+          .attr('stroke', isSelected ? '#ffffff' : color)
+          .attr('stroke-width', isSelected ? 2.5 : 1.5)
+          .attr('filter', 'url(#glow)')
+          .style('cursor', 'pointer');
 
         group.append('line')
           .attr('x1', 0)
@@ -412,9 +473,10 @@ export function VolatilityRiver({
           .attr('y1', -10)
           .attr('y2', -(innerHeight + 10))
           .attr('stroke', color)
-          .attr('stroke-width', 1)
-          .attr('stroke-dasharray', '2,2')
-          .attr('opacity', isSelected ? 0.5 : 0.2);
+          .attr('stroke-width', isSelected ? 2 : 1)
+          .attr('stroke-dasharray', '3,3')
+          .attr('opacity', isSelected ? 0.6 : 0.3)
+          .style('cursor', 'pointer');
       });
 
     // Zoom behavior with constraints
@@ -477,9 +539,17 @@ export function VolatilityRiver({
         updateXAxis(newXScale);
 
         // Update current date cursor
+        const newCursorX = newXScale(currentDate);
         g.select('.current-date-cursor')
-          .attr('x1', newXScale(currentDate))
-          .attr('x2', newXScale(currentDate));
+          .attr('x1', newCursorX)
+          .attr('x2', newCursorX);
+
+        // Update triangle markers
+        g.select('.cursor-marker-top')
+          .attr('points', `${newCursorX},${triangleSize} ${newCursorX - triangleSize},0 ${newCursorX + triangleSize},0`);
+        
+        g.select('.cursor-marker-bottom')
+          .attr('points', `${newCursorX},${innerHeight - triangleSize} ${newCursorX - triangleSize},${innerHeight} ${newCursorX + triangleSize},${innerHeight}`);
 
         // Update Fed rate line and dots
         if (showFedRate && fedRates.length > 0 && validRatePoints.length > 0) {
@@ -543,8 +613,8 @@ export function VolatilityRiver({
   }, [data, currentDateIndex, selectedBand, signals, selectedSignal, showFedRate, fedRates, onBandClick, onSignalClick]);
 
   return (
-    <div ref={containerRef} className="flex-1 bg-chart-background">
-      <svg ref={svgRef} className="w-full h-full" />
+    <div ref={containerRef} className="w-full h-full bg-transparent rounded-lg">
+      <svg ref={svgRef} className="w-full h-full" style={{ background: 'transparent' }} />
     </div>
   );
 }

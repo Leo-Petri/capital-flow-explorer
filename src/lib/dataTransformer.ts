@@ -313,6 +313,7 @@ export function transformClientData(rawData: RawAssetData[]): {
   const assetMap = new Map<string, {
     volatility: number;
     interestRate: number | string;
+    purchasePrice: number;
     totalProfit: number;
     transactions: RawTransaction[];
     dailyChanges: DailyChange[];
@@ -333,25 +334,51 @@ export function transformClientData(rawData: RawAssetData[]): {
       }
     }
     
-    // Skip assets with no daily data from 2019 onwards
-    if (filteredDailyChanges.length === 0) {
+    // Include assets even if they have no daily data from 2019+, as long as they have transactions_detail
+    // This ensures assets like "Moha Solar Park" with sparse data are still included
+    const hasTransactions = item.transactions_detail && item.transactions_detail.length > 0;
+    const hasDailyData = filteredDailyChanges.length > 0;
+    
+    // Skip only if asset has neither transactions nor daily data from 2019+
+    if (!hasDailyData && !hasTransactions) {
       return;
     }
     
     const existing = assetMap.get(item.asset);
     if (existing) {
       // Merge daily changes, keeping the most recent value for each date
-      const dateMap = new Map<string, DailyChange>();
-      existing.dailyChanges.forEach(dc => dateMap.set(dc.date, dc));
-      filteredDailyChanges.forEach(dc => dateMap.set(dc.date, dc));
-      existing.dailyChanges = Array.from(dateMap.values()).sort((a, b) => 
-        a.date.localeCompare(b.date)
-      );
-      existing.transactions.push(...item.transactions_detail);
+      if (hasDailyData) {
+        const dateMap = new Map<string, DailyChange>();
+        existing.dailyChanges.forEach(dc => dateMap.set(dc.date, dc));
+        filteredDailyChanges.forEach(dc => dateMap.set(dc.date, dc));
+        existing.dailyChanges = Array.from(dateMap.values()).sort((a, b) => 
+          a.date.localeCompare(b.date)
+        );
+      }
+      // Always merge transactions (deduplicate by buy_date + sell_date)
+      const transactionMap = new Map<string, RawTransaction>();
+      existing.transactions.forEach(txn => {
+        const key = `${txn.buy_date}_${txn.sell_date}`;
+        transactionMap.set(key, txn);
+      });
+      item.transactions_detail.forEach(txn => {
+        const key = `${txn.buy_date}_${txn.sell_date}`;
+        transactionMap.set(key, txn);
+      });
+      existing.transactions = Array.from(transactionMap.values());
+      // Update purchase price if not set or use the latest one
+      if (!existing.purchasePrice || item.purchase_price) {
+        existing.purchasePrice = item.purchase_price;
+      }
+      // Update total profit (use the latest one, as each entry represents the asset's total profit)
+      if (item.total_profit !== undefined && item.total_profit !== null) {
+        existing.totalProfit = item.total_profit;
+      }
     } else {
       assetMap.set(item.asset, {
         volatility: item.volatility,
         interestRate: item.interest_rate,
+        purchasePrice: item.purchase_price,
         totalProfit: item.total_profit,
         transactions: [...item.transactions_detail],
         dailyChanges: filteredDailyChanges.sort((a, b) => a.date.localeCompare(b.date))
@@ -386,33 +413,86 @@ export function transformClientData(rawData: RawAssetData[]): {
   
   console.log('📅 Daily dates range:', dailyDates[0], 'to', dailyDates[dailyDates.length - 1], `(${dailyDates.length} days)`);
   
-  // Step 1: Collect all volatilities for percentile calculation
-  const volatilities: number[] = [];
-  assetMap.forEach((data) => {
-    volatilities.push(data.volatility);
+  // Step 1: First classify all assets to get their categories
+  const assetClassifications = new Map<string, AssetClassification>();
+  assetMap.forEach((data, assetName) => {
+    const hasInterestRate = typeof data.interestRate === 'number' && data.interestRate > 0;
+    const classification = classifyAsset(assetName, data.volatility, hasInterestRate);
+    assetClassifications.set(assetName, classification);
   });
-  
-  // Step 2: Calculate volatility percentiles for clustering
-  const volatilityPercentiles = calculateVolatilityPercentiles(volatilities);
-  console.log('📊 Volatility percentiles:', {
-    p20: volatilityPercentiles.p20.toFixed(4),
-    p40: volatilityPercentiles.p40.toFixed(4),
-    p60: volatilityPercentiles.p60.toFixed(4),
-    p80: volatilityPercentiles.p80.toFixed(4),
-    min: Math.min(...volatilities).toFixed(4),
-    max: Math.max(...volatilities).toFixed(4),
+
+  // Step 2: Group assets by asset class (second level of categoryPath)
+  const assetsByClass = new Map<string, { assetName: string; volatility: number }[]>();
+  assetMap.forEach((data, assetName) => {
+    const classification = assetClassifications.get(assetName)!;
+    // Use second level of categoryPath (e.g., 'Cash', 'Equities', 'Private Equity')
+    // Fallback to first level if second doesn't exist
+    const assetClass = classification.categoryPath.length > 1 
+      ? classification.categoryPath[1] 
+      : classification.categoryPath[0];
+    
+    if (!assetsByClass.has(assetClass)) {
+      assetsByClass.set(assetClass, []);
+    }
+    assetsByClass.get(assetClass)!.push({ assetName, volatility: data.volatility });
   });
-  
-  // Step 3: Generate assets with classification and percentile-based volatility
+
+  // Step 3: Calculate percentiles per asset class
+  const percentilesByClass = new Map<string, ReturnType<typeof calculateVolatilityPercentiles>>();
+  assetsByClass.forEach((assets, assetClass) => {
+    const volatilities = assets.map(a => a.volatility);
+    if (volatilities.length === 0) return;
+    
+    const percentiles = calculateVolatilityPercentiles(volatilities);
+    percentilesByClass.set(assetClass, percentiles);
+    console.log(`📊 Volatility percentiles for ${assetClass}:`, {
+      count: assets.length,
+      p20: percentiles.p20.toFixed(4),
+      p40: percentiles.p40.toFixed(4),
+      p60: percentiles.p60.toFixed(4),
+      p80: percentiles.p80.toFixed(4),
+      min: Math.min(...volatilities).toFixed(4),
+      max: Math.max(...volatilities).toFixed(4),
+    });
+  });
+
+  // Calculate global percentiles as fallback for classes with too few assets
+  const allVolatilities: number[] = [];
+  assetMap.forEach((d) => allVolatilities.push(d.volatility));
+  const globalPercentiles = calculateVolatilityPercentiles(allVolatilities);
+  console.log('📊 Global volatility percentiles (fallback):', {
+    p20: globalPercentiles.p20.toFixed(4),
+    p40: globalPercentiles.p40.toFixed(4),
+    p60: globalPercentiles.p60.toFixed(4),
+    p80: globalPercentiles.p80.toFixed(4),
+    min: Math.min(...allVolatilities).toFixed(4),
+    max: Math.max(...allVolatilities).toFixed(4),
+  });
+
+  // Step 4: Generate assets using asset-class-specific percentiles
   const assets: Asset[] = [];
   let assetIdCounter = 1;
   
   assetMap.forEach((data, assetName) => {
-    const hasInterestRate = typeof data.interestRate === 'number' && data.interestRate > 0;
-    const classification = classifyAsset(assetName, data.volatility, hasInterestRate);
+    const classification = assetClassifications.get(assetName)!;
+    const assetClass = classification.categoryPath.length > 1 
+      ? classification.categoryPath[1] 
+      : classification.categoryPath[0];
+    
+    // Get class-specific percentiles, fallback to global if class has too few assets
+    let classPercentiles = percentilesByClass.get(assetClass);
+    
+    // If class has fewer than 5 assets, use global percentiles as fallback
+    if (!classPercentiles || assetsByClass.get(assetClass)!.length < 5) {
+      if (assetsByClass.get(assetClass)!.length < 5) {
+        console.warn(`⚠️ Asset class "${assetClass}" has only ${assetsByClass.get(assetClass)!.length} assets, using global percentiles`);
+      }
+      classPercentiles = globalPercentiles;
+    }
+    
     const { score: volatilityScore, band: volatilityBand } = calculateVolatilityFromPercentiles(
       data.volatility,
-      volatilityPercentiles,
+      classPercentiles,
       classification
     );
     
@@ -422,7 +502,13 @@ export function transformClientData(rawData: RawAssetData[]): {
       categoryPath: classification.categoryPath,
       isLiquid: classification.isLiquid,
       volatilityBand,
-      volatilityScore
+      volatilityScore,
+      // Store raw data for detailed view
+      rawVolatility: data.volatility,
+      interestRate: data.interestRate,
+      purchasePrice: data.purchasePrice,
+      totalProfit: data.totalProfit,
+      transactions: data.transactions.length > 0 ? data.transactions : undefined
     });
   });
   

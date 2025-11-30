@@ -5,6 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { KpiId } from '@/data/mockData';
+import oscillaLogo from '@/assets/oscilla-logo.png';
 
 function formatDate(dateStr: string): string {
   // Handle both YYYY-MM-DD and YYYY-MM formats
@@ -68,27 +69,34 @@ export function ControlsPanel({
   onShowFedRateChange,
 }: ControlsPanelProps) {
   return (
-    <div className="w-80 bg-card border-r border-border p-6 space-y-8 overflow-y-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground mb-1">River of Wealth</h1>
-        <p className="text-sm text-muted-foreground">Volatility Lens Portfolio</p>
+    <div className="h-full bg-[#15232F] rounded-lg p-6 space-y-8 overflow-y-auto border border-[rgba(255,255,255,0.05)] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+      {/* Logo and Branding */}
+      <div className="flex flex-col items-center text-center space-y-2 pb-2">
+        <img 
+          src={oscillaLogo} 
+          alt="Oscilla" 
+          className="h-8 w-auto object-contain opacity-90"
+        />
+        <p className="text-xs text-[rgba(255,255,255,0.65)] font-light tracking-wide">
+          Dynamic Wealth Complexity Mapping
+        </p>
       </div>
 
       {/* Timeline */}
       <div className="space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-foreground mb-3">Timeline</h2>
+          <h2 className="text-sm font-semibold text-[rgba(255,255,255,0.90)] uppercase tracking-wider mb-3">Timeline</h2>
           <div className="flex items-center gap-2 mb-3">
             <Button
               size="sm"
               variant="outline"
               onClick={onPlayPause}
-              className="w-10 h-10 p-0"
+              className="w-10 h-10 p-0 bg-[#1E3242] hover:bg-[#254155] border-[rgba(255,255,255,0.1)]"
             >
               {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
             <div className="flex-1">
-              <p className="text-sm font-mono text-muted-foreground">
+              <p className="text-sm font-mono text-[rgba(255,255,255,0.70)]">
                 {formatDate(currentDate)}
               </p>
             </div>
@@ -105,13 +113,13 @@ export function ControlsPanel({
 
       {/* View Filters */}
       <div className="space-y-4">
-        <h2 className="text-sm font-semibold text-foreground mb-3">View</h2>
+        <h2 className="text-sm font-semibold text-[rgba(255,255,255,0.90)] uppercase tracking-wider mb-3">View</h2>
         <div className="flex gap-2">
           <Button
             size="sm"
             variant={filterMode === 'all' ? 'default' : 'outline'}
             onClick={() => onFilterModeChange('all')}
-            className="flex-1"
+            className={`flex-1 ${filterMode === 'all' ? 'bg-[#4DA3F7] hover:bg-[#3B8DE0] text-[#0F1A24]' : 'bg-[#1E3242] hover:bg-[#254155] border-[rgba(255,255,255,0.1)]'}`}
           >
             All
           </Button>
@@ -119,7 +127,7 @@ export function ControlsPanel({
             size="sm"
             variant={filterMode === 'liquid' ? 'default' : 'outline'}
             onClick={() => onFilterModeChange('liquid')}
-            className="flex-1"
+            className={`flex-1 ${filterMode === 'liquid' ? 'bg-[#4DA3F7] hover:bg-[#3B8DE0] text-[#0F1A24]' : 'bg-[#1E3242] hover:bg-[#254155] border-[rgba(255,255,255,0.1)]'}`}
           >
             Liquid
           </Button>
@@ -127,18 +135,18 @@ export function ControlsPanel({
             size="sm"
             variant={filterMode === 'illiquid' ? 'default' : 'outline'}
             onClick={() => onFilterModeChange('illiquid')}
-            className="flex-1"
+            className={`flex-1 ${filterMode === 'illiquid' ? 'bg-[#4DA3F7] hover:bg-[#3B8DE0] text-[#0F1A24]' : 'bg-[#1E3242] hover:bg-[#254155] border-[rgba(255,255,255,0.1)]'}`}
           >
             Illiquid
           </Button>
         </div>
       </div>
 
-      {/* KPI Selection */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground mb-3">KPI</h2>
+      {/* KPI Selector */}
+      <div className="space-y-4">
+        <h2 className="text-sm font-semibold text-[rgba(255,255,255,0.90)] uppercase tracking-wider mb-3">KPI</h2>
         <div className="space-y-2">
-          <Label className="text-sm">View KPI as Y-Axis</Label>
+          <Label className="text-sm text-[rgba(255,255,255,0.70)]">View KPI as Y-Axis</Label>
           <Select value={selectedKpi} onValueChange={(val) => onKpiChange(val as KpiId)}>
             <SelectTrigger>
               <SelectValue />
@@ -156,9 +164,9 @@ export function ControlsPanel({
 
       {/* Fed Rate Toggle */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground mb-3">Overlays</h2>
+        <h2 className="text-sm font-semibold text-[rgba(255,255,255,0.90)] uppercase tracking-wider mb-3">Overlays</h2>
         <div className="flex items-center justify-between">
-          <Label htmlFor="fed-rate" className="text-sm cursor-pointer">
+          <Label htmlFor="fed-rate" className="text-sm text-[rgba(255,255,255,0.70)] cursor-pointer">
             Show Fed Funds Rate
           </Label>
           <Switch
