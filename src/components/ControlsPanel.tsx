@@ -44,6 +44,14 @@ interface ControlsPanelProps {
   onKpiChange: (kpi: KpiId) => void;
   showFedRate: boolean;
   onShowFedRateChange: (show: boolean) => void;
+  showNewsSignals: boolean;
+  onShowNewsSignalsChange: (show: boolean) => void;
+  showGoodSignals: boolean;
+  onShowGoodSignalsChange: (show: boolean) => void;
+  showNeutralSignals: boolean;
+  onShowNeutralSignalsChange: (show: boolean) => void;
+  showBadSignals: boolean;
+  onShowBadSignalsChange: (show: boolean) => void;
 }
 
 const KPI_LABELS: Record<KpiId, string> = {
@@ -67,6 +75,14 @@ export function ControlsPanel({
   onKpiChange,
   showFedRate,
   onShowFedRateChange,
+  showNewsSignals,
+  onShowNewsSignalsChange,
+  showGoodSignals,
+  onShowGoodSignalsChange,
+  showNeutralSignals,
+  onShowNeutralSignalsChange,
+  showBadSignals,
+  onShowBadSignalsChange,
 }: ControlsPanelProps) {
   return (
     <div className="h-full rounded-none p-6 space-y-8 overflow-y-auto border-r border-[#1F2937]" style={{ backgroundColor: '#111827' }}>
@@ -162,9 +178,11 @@ export function ControlsPanel({
         </div>
       </div>
 
-      {/* Fed Rate Toggle */}
+      {/* Overlays Section */}
       <div className="space-y-3">
         <h2 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Overlays</h2>
+        
+        {/* Fed Rate Toggle */}
         <div className="flex items-center justify-between">
           <Label htmlFor="fed-rate" className="text-sm text-[#9CA3AF] cursor-pointer">
             Show Fed Funds Rate
@@ -175,6 +193,65 @@ export function ControlsPanel({
             onCheckedChange={onShowFedRateChange}
           />
         </div>
+
+        {/* News Signals Main Toggle */}
+        <div className="flex items-center justify-between">
+          <Label htmlFor="news-signals" className="text-sm text-[#9CA3AF] cursor-pointer">
+            Show News Signals
+          </Label>
+          <Switch
+            id="news-signals"
+            checked={showNewsSignals}
+            onCheckedChange={onShowNewsSignalsChange}
+          />
+        </div>
+
+        {/* Per-Type Toggles (only visible when main toggle is ON) */}
+        {showNewsSignals && (
+          <div className="pl-4 space-y-2 border-l-2 border-[#1F2937]">
+            {/* Good Signals */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="good-signals" className="text-xs text-[#9CA3AF] cursor-pointer flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#22C55E]" />
+                Good
+              </Label>
+              <Switch
+                id="good-signals"
+                checked={showGoodSignals}
+                onCheckedChange={onShowGoodSignalsChange}
+                className="scale-75"
+              />
+            </div>
+
+            {/* Neutral Signals */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="neutral-signals" className="text-xs text-[#9CA3AF] cursor-pointer flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#F97316]" />
+                Neutral
+              </Label>
+              <Switch
+                id="neutral-signals"
+                checked={showNeutralSignals}
+                onCheckedChange={onShowNeutralSignalsChange}
+                className="scale-75"
+              />
+            </div>
+
+            {/* Bad Signals */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="bad-signals" className="text-xs text-[#9CA3AF] cursor-pointer flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
+                Bad
+              </Label>
+              <Switch
+                id="bad-signals"
+                checked={showBadSignals}
+                onCheckedChange={onShowBadSignalsChange}
+                className="scale-75"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
