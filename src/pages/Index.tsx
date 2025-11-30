@@ -153,6 +153,13 @@ const Index = () => {
       setSelectedSignal(null);
     } else {
       setSelectedSignal(signal || null);
+      // When selecting a signal, move timeline to that date
+      if (signal) {
+        const dateIndex = MONTHLY_DATES.findIndex(d => d.startsWith(signal.date) || signal.date.startsWith(d));
+        if (dateIndex >= 0) {
+          setCurrentDateIndex(dateIndex);
+        }
+      }
     }
     // Don't clear band/asset when clicking signals
   };
@@ -189,6 +196,7 @@ const Index = () => {
           <VolatilityRiver
             data={stackedData}
             currentDateIndex={currentDateIndex}
+            onDateIndexChange={setCurrentDateIndex}
             onBandClick={handleBandClick}
             selectedBand={selectedBand}
             signals={signals}
