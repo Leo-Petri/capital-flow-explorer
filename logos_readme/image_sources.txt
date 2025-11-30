@@ -7,3 +7,4 @@ qplix = https://www.qplix.com/de (30/11/2025)
 vercel = https://vercel.com/home (30/11/2025)
 aws = https://aws.amazon.com/de/
 lovable = https://lovable.dev/
+openai = https://openai.com/
