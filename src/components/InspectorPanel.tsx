@@ -59,73 +59,106 @@ function getFedRateForDate(date: string, fedRates: RatePoint[]): number | null {
   return latestRate ? latestRate.rate : null;
 }
 
-// Analyze Risk-On/Risk-Off behavior during rate cycles
+// Analyze Risk-On/Risk-Off behavior during interest rate regimes
+interface RegimeAnalysis {
+  period: string;
+  hotVeryHotPct: number;
+  coldMildPct: number;
+  warmPct: number;
+  stance: 'Risk-On' | 'Risk-Off' | 'Neutral';
+}
+
 function analyzeRiskBehavior(
-  stackedData: Array<{ date: string; cold: number; mild: number; warm: number; hot: number; very_hot: number; total: number }> | undefined,
-  fedRates: RatePoint[]
+  stackedData: Array<{ date: string; cold: number; mild: number; warm: number; hot: number; very_hot: number; total: number }> | undefined
 ): {
-  rateCuts: { hotVeryHotPct: number; period: string };
-  rateHikes: { coldMildPct: number; period: string };
-  currentRiskAppetite: 'risk-on' | 'risk-off' | 'neutral';
+  rateCuts: RegimeAnalysis;
+  zeroRates: RegimeAnalysis;
+  rateHikes: RegimeAnalysis;
 } | null {
   if (!stackedData || stackedData.length === 0) return null;
 
-  // Define rate cut period (2020): March 2020 - December 2020
-  const rateCutStart = '2020-03';
-  const rateCutEnd = '2020-12';
-  
-  // Define rate hike period (2022-2023): March 2022 - December 2023
-  const rateHikeStart = '2022-03';
-  const rateHikeEnd = '2023-12';
-
-  // Calculate average composition during rate cuts
-  const rateCutData = stackedData.filter(d => {
-    const datePrefix = d.date.substring(0, 7);
-    return datePrefix >= rateCutStart && datePrefix <= rateCutEnd;
-  });
-  
-  // Calculate average composition during rate hikes
-  const rateHikeData = stackedData.filter(d => {
-    const datePrefix = d.date.substring(0, 7);
-    return datePrefix >= rateHikeStart && datePrefix <= rateHikeEnd;
-  });
-
-  if (rateCutData.length === 0 || rateHikeData.length === 0) return null;
-
-  // Calculate average percentages
-  const avgCutHotVeryHot = rateCutData.reduce((sum, d) => {
-    const total = d.total || 1;
-    return sum + ((d.hot + d.very_hot) / total) * 100;
-  }, 0) / rateCutData.length;
-
-  const avgHikeColdMild = rateHikeData.reduce((sum, d) => {
-    const total = d.total || 1;
-    return sum + ((d.cold + d.mild) / total) * 100;
-  }, 0) / rateHikeData.length;
-
-  // Determine current risk appetite (using most recent data point)
-  const latest = stackedData[stackedData.length - 1];
-  const currentHotVeryHotPct = latest.total > 0 ? ((latest.hot + latest.very_hot) / latest.total) * 100 : 0;
-  const currentColdMildPct = latest.total > 0 ? ((latest.cold + latest.mild) / latest.total) * 100 : 0;
-  
-  let currentRiskAppetite: 'risk-on' | 'risk-off' | 'neutral' = 'neutral';
-  if (currentHotVeryHotPct > avgCutHotVeryHot * 0.9) {
-    currentRiskAppetite = 'risk-on';
-  } else if (currentColdMildPct > avgHikeColdMild * 0.9) {
-    currentRiskAppetite = 'risk-off';
-  }
-
-  return {
-    rateCuts: {
-      hotVeryHotPct: avgCutHotVeryHot,
-      period: '2020 (Rate Cuts)'
+  // Define three fixed interest rate regimes
+  const regimes = [
+    {
+      key: 'rateCuts' as const,
+      period: 'Rate Cuts (2019 – Early 2020)',
+      start: '2019-01',
+      end: '2020-02',
     },
-    rateHikes: {
-      coldMildPct: avgHikeColdMild,
-      period: '2022-2023 (Rate Hikes)'
+    {
+      key: 'zeroRates' as const,
+      period: 'Zero Rates (2020 – 2021)',
+      start: '2020-03',
+      end: '2021-12',
     },
-    currentRiskAppetite
-  };
+    {
+      key: 'rateHikes' as const,
+      period: 'Rate Hikes (2022 – 2025)',
+      start: '2022-01',
+      end: '2025-12',
+    },
+  ];
+
+  const results: any = {};
+
+  regimes.forEach(regime => {
+    // Filter data for this regime
+    const regimeData = stackedData.filter(d => {
+      const datePrefix = d.date.substring(0, 7);
+      return datePrefix >= regime.start && datePrefix <= regime.end;
+    });
+
+    if (regimeData.length === 0) {
+      results[regime.key] = {
+        period: regime.period,
+        hotVeryHotPct: 0,
+        coldMildPct: 0,
+        warmPct: 0,
+        stance: 'Neutral' as const,
+      };
+      return;
+    }
+
+    // Calculate average percentages for this regime
+    const avgHotVeryHot = regimeData.reduce((sum, d) => {
+      const total = d.total || 1;
+      return sum + ((d.hot + d.very_hot) / total) * 100;
+    }, 0) / regimeData.length;
+
+    const avgColdMild = regimeData.reduce((sum, d) => {
+      const total = d.total || 1;
+      return sum + ((d.cold + d.mild) / total) * 100;
+    }, 0) / regimeData.length;
+
+    const avgWarm = regimeData.reduce((sum, d) => {
+      const total = d.total || 1;
+      return sum + (d.warm / total) * 100;
+    }, 0) / regimeData.length;
+
+    // Determine stance:
+    // Risk-On if high-entropy (Warm + Hot + Very Hot) > 50%
+    // Risk-Off if low-entropy (Cold + Mild) > 50%
+    // Neutral otherwise
+    const highVolPct = avgWarm + avgHotVeryHot;
+    let stance: 'Risk-On' | 'Risk-Off' | 'Neutral';
+    if (highVolPct > 50) {
+      stance = 'Risk-On';
+    } else if (avgColdMild > 50) {
+      stance = 'Risk-Off';
+    } else {
+      stance = 'Neutral';
+    }
+
+    results[regime.key] = {
+      period: regime.period,
+      hotVeryHotPct: avgHotVeryHot,
+      coldMildPct: avgColdMild,
+      warmPct: avgWarm,
+      stance,
+    };
+  });
+
+  return results;
 }
 
 export function InspectorPanel({
@@ -535,55 +568,45 @@ export function InspectorPanel({
 
         {/* Risk-On/Risk-Off Analysis */}
         {(() => {
-          const riskAnalysis = analyzeRiskBehavior(stackedData, FED_RATES);
+          const riskAnalysis = analyzeRiskBehavior(stackedData);
           if (!riskAnalysis) return null;
+
+          const regimes = [riskAnalysis.rateCuts, riskAnalysis.zeroRates, riskAnalysis.rateHikes];
 
           return (
             <div className="px-6 py-4 border-b border-[rgba(255,255,255,0.05)] bg-muted/20">
               <h3 className="text-sm font-semibold mb-3">Risk-On/Risk-Off Analysis</h3>
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">During Rate Cuts (2020)</span>
-                    <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/30">
-                      Risk-On
-                    </Badge>
+              <div className="space-y-4">
+                {regimes.map((regime, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground font-medium">{regime.period}</span>
+                      <Badge 
+                        variant="outline" 
+                        className={
+                          regime.stance === 'Risk-On'
+                            ? 'bg-green-500/10 text-green-500 border-green-500/30'
+                            : regime.stance === 'Risk-Off'
+                            ? 'bg-red-500/10 text-red-500 border-red-500/30'
+                            : 'bg-muted text-muted-foreground border-muted-foreground/30'
+                        }
+                      >
+                        {regime.stance}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground/70 pl-2 space-y-1">
+                      <div>
+                        Hot + Very Hot: <span className="font-mono font-semibold text-foreground">{regime.hotVeryHotPct.toFixed(1)}%</span>
+                      </div>
+                      <div>
+                        Cold + Mild: <span className="font-mono font-semibold text-foreground">{regime.coldMildPct.toFixed(1)}%</span>
+                      </div>
+                      <div>
+                        Warm: <span className="font-mono font-semibold text-foreground">{regime.warmPct.toFixed(1)}%</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground/70 pl-2">
-                    Hot + Very Hot: <span className="font-mono font-semibold text-foreground">{riskAnalysis.rateCuts.hotVeryHotPct.toFixed(1)}%</span> of portfolio
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">During Rate Hikes (2022-2023)</span>
-                    <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/30">
-                      Risk-Off
-                    </Badge>
-                  </div>
-                  <div className="text-xs text-muted-foreground/70 pl-2">
-                    Cold + Mild: <span className="font-mono font-semibold text-foreground">{riskAnalysis.rateHikes.coldMildPct.toFixed(1)}%</span> of portfolio
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-[rgba(255,255,255,0.05)]">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">Current Risk Appetite</span>
-                    <Badge 
-                      variant="outline" 
-                      className={
-                        riskAnalysis.currentRiskAppetite === 'risk-on' 
-                          ? 'bg-green-500/10 text-green-500 border-green-500/30'
-                          : riskAnalysis.currentRiskAppetite === 'risk-off'
-                          ? 'bg-red-500/10 text-red-500 border-red-500/30'
-                          : 'bg-muted text-muted-foreground'
-                      }
-                    >
-                      {riskAnalysis.currentRiskAppetite === 'risk-on' ? 'Risk-On' : 
-                       riskAnalysis.currentRiskAppetite === 'risk-off' ? 'Risk-Off' : 'Neutral'}
-                    </Badge>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           );
