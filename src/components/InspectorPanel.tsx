@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { X, TrendingUp, TrendingDown } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 interface InspectorPanelProps {
   selectedBand: VolatilityBandId | null;
@@ -298,14 +298,59 @@ export function InspectorPanel({
             
             {/* Position Chart */}
             {(() => {
-              const chartData = navSeries
-                .filter(s => s.value > 0)
-                .map(s => ({ date: s.date, position: s.value }));
+              // OPTIMIZATION: Pre-filter and map in single pass
+              const chartData: { date: string; position: number; fedRate: number | null }[] = [];
+              for (let i = 0; i < navSeries.length; i++) {
+                const s = navSeries[i];
+                if (s.value > 0) {
+                  // Get Fed rate for this date
+                  const fedRate = getFedRateForDate(s.date, FED_RATES);
+                  chartData.push({ date: s.date, position: s.value, fedRate });
+                }
+              }
               
               // Show chart if we have at least 2 data points (needed for a line)
               if (chartData.length < 2) {
                 return null;
               }
+              
+              // OPTIMIZATION: Memoize formatters to avoid creating functions on every render
+              const dateTickFormatter = (value: string) => {
+                try {
+                  const date = new Date(value);
+                  if (isNaN(date.getTime())) return value;
+                  return `${date.getMonth() + 1}/${date.getFullYear().toString().slice(-2)}`;
+                } catch {
+                  return value;
+                }
+              };
+              
+              const positionTickFormatter = (value: number) => {
+                if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+                if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+                return `$${value}`;
+              };
+              
+              const rateTickFormatter = (value: number) => `${value.toFixed(1)}%`;
+              
+              const tooltipLabelFormatter = (value: string) => {
+                try {
+                  const date = new Date(value);
+                  if (isNaN(date.getTime())) return value;
+                  return date.toLocaleDateString();
+                } catch {
+                  return value;
+                }
+              };
+              
+              const tooltipFormatter = (value: number, name: string) => {
+                if (name === 'Position (NAV)') {
+                  return [`$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, name];
+                } else if (name === 'Fed Rate') {
+                  return [`${value.toFixed(2)}%`, name];
+                }
+                return [value, name];
+              };
               
               return (
                 <div className="mt-4">
@@ -316,55 +361,45 @@ export function InspectorPanel({
                         label: "Position (NAV)",
                         color: "hsl(var(--chart-line-bright))",
                       },
+                      fedRate: {
+                        label: "Fed Rate",
+                        color: "#D4A017",
+                      },
                     }}
                     className="h-[200px] w-full"
                   >
-                    <LineChart 
+                    <ComposedChart 
                       data={chartData}
-                      margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+                      margin={{ top: 5, right: 50, left: 10, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                       <XAxis
                         dataKey="date"
-                        tickFormatter={(value) => {
-                          try {
-                            const date = new Date(value);
-                            if (isNaN(date.getTime())) return value;
-                            return `${date.getMonth() + 1}/${date.getFullYear().toString().slice(-2)}`;
-                          } catch {
-                            return value;
-                          }
-                        }}
+                        tickFormatter={dateTickFormatter}
                         className="text-xs"
                         interval="preserveStartEnd"
                         tick={{ fill: 'hsl(var(--muted-foreground))' }}
                       />
                       <YAxis
-                        tickFormatter={(value) => {
-                          if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-                          if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-                          return `$${value}`;
-                        }}
+                        yAxisId="position"
+                        tickFormatter={positionTickFormatter}
                         className="text-xs"
                         tick={{ fill: 'hsl(var(--muted-foreground))' }}
                       />
+                      <YAxis
+                        yAxisId="rate"
+                        orientation="right"
+                        tickFormatter={rateTickFormatter}
+                        className="text-xs"
+                        tick={{ fill: '#D4A017' }}
+                      />
                       <ChartTooltip
                         content={<ChartTooltipContent />}
-                        labelFormatter={(value) => {
-                          try {
-                            const date = new Date(value);
-                            if (isNaN(date.getTime())) return value;
-                            return date.toLocaleDateString();
-                          } catch {
-                            return value;
-                          }
-                        }}
-                        formatter={(value: number) => [
-                          `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-                          "Position (NAV)"
-                        ]}
+                        labelFormatter={tooltipLabelFormatter}
+                        formatter={tooltipFormatter}
                       />
                       <Line
+                        yAxisId="position"
                         type="monotone"
                         dataKey="position"
                         stroke="hsl(var(--chart-line-bright))"
@@ -372,7 +407,17 @@ export function InspectorPanel({
                         dot={false}
                         activeDot={{ r: 4, fill: "hsl(var(--chart-line-bright))" }}
                       />
-                    </LineChart>
+                      <Line
+                        yAxisId="rate"
+                        type="stepAfter"
+                        dataKey="fedRate"
+                        stroke="#D4A017"
+                        strokeWidth={2.5}
+                        dot={false}
+                        strokeDasharray="0"
+                        connectNulls={false}
+                      />
+                    </ComposedChart>
                   </ChartContainer>
                 </div>
               );

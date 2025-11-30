@@ -353,10 +353,11 @@ export function VolatilityRiver({
           .domain([0, d3.max(validRatePoints, r => r.rate) || 6])
           .range([innerHeight, 0]);
 
+        // OPTIMIZATION: Use step curve for discrete interest rate data (rectangular/step function)
         const rateLine = d3.line<RatePoint & { date: Date; dateIndex: number }>()
           .x(d => xScale(d.date))
           .y(d => rateScale(d.rate))
-          .curve(d3.curveMonotoneX)
+          .curve(d3.curveStepAfter) // Step function: rate holds until next change
           .defined(() => true);
 
         g.append('path')
@@ -562,7 +563,7 @@ export function VolatilityRiver({
           const rateLine = d3.line<RatePoint & { date: Date; dateIndex: number }>()
             .x(d => newXScale(d.date))
             .y(d => rateScale(d.rate))
-            .curve(d3.curveMonotoneX);
+            .curve(d3.curveStepAfter); // Step function: rate holds until next change
 
           g.select('.rate-line').attr('d', rateLine);
           
