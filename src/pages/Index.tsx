@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { ControlsPanel } from "@/components/ControlsPanel";
 import { VolatilityRiver } from "@/components/VolatilityRiver";
 import { InspectorPanel } from "@/components/InspectorPanel";
+import { NewsPanel } from "@/components/NewsPanel";
 import {
   loadClientData,
   loadSignalsFromCSV,
@@ -171,9 +172,9 @@ const Index = () => {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: '#0D1117' }}>
-      {/* Left Panel - Controls */}
-      <div className="w-80 flex-shrink-0">
+    <div className="flex h-screen w-full overflow-hidden bg-[#111827]">
+      {/* Left Panel - Controls (dark blue) */}
+      <div className="w-80 flex-shrink-0 h-full" style={{ backgroundColor: '#111827' }}>
         <ControlsPanel
           currentDateIndex={currentDateIndex}
           maxDateIndex={MONTHLY_DATES.length - 1}
@@ -190,26 +191,40 @@ const Index = () => {
         />
       </div>
 
-      {/* Center Panel - Visualization */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full h-full bg-[#111827] rounded-none border border-[#1F2937] shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-6">
-          <VolatilityRiver
-            data={stackedData}
-            currentDateIndex={currentDateIndex}
-            onDateIndexChange={setCurrentDateIndex}
-            onBandClick={handleBandClick}
-            selectedBand={selectedBand}
-            signals={signals}
-            onSignalClick={handleSignalClick}
-            selectedSignal={selectedSignal?.id || null}
-            showFedRate={showFedRate}
-            fedRates={FED_RATES}
-          />
+      {/* Center Panel - Chart + News (darker stage) */}
+      <div className="flex-1 flex flex-col h-full" style={{ backgroundColor: '#050A12' }}>
+        {/* Top: Chart Area (~75% height) */}
+        <div className="flex-1 p-8" style={{ maxHeight: '75%' }}>
+          <div className="w-full h-full rounded-lg border border-[rgba(255,255,255,0.06)] shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-6" style={{ backgroundColor: '#050A12' }}>
+            <VolatilityRiver
+              data={stackedData}
+              currentDateIndex={currentDateIndex}
+              onDateIndexChange={setCurrentDateIndex}
+              onBandClick={handleBandClick}
+              selectedBand={selectedBand}
+              signals={signals}
+              onSignalClick={handleSignalClick}
+              selectedSignal={selectedSignal?.id || null}
+              showFedRate={showFedRate}
+              fedRates={FED_RATES}
+            />
+          </div>
+        </div>
+
+        {/* Bottom: News Panel (~25% height) */}
+        <div 
+          className="h-48 border-t flex-shrink-0" 
+          style={{ 
+            backgroundColor: '#050A12',
+            borderColor: 'rgba(255,255,255,0.06)'
+          }}
+        >
+          <NewsPanel selectedSignal={selectedSignal} />
         </div>
       </div>
 
-      {/* Right Panel - Inspector */}
-      <div className="w-96 flex-shrink-0">
+      {/* Right Panel - Inspector (dark blue) */}
+      <div className="w-96 flex-shrink-0 h-full" style={{ backgroundColor: '#111827' }}>
         <InspectorPanel
           selectedBand={selectedBand}
           selectedAsset={selectedAsset}

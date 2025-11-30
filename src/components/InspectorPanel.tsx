@@ -145,56 +145,20 @@ export function InspectorPanel({
 
   if (!selectedBand && !selectedAsset && !selectedSignal) {
     return (
-      <div className="w-96 bg-[#111827] rounded-none border-l border-[#1F2937] p-6">
+      <div className="h-full rounded-none border-l border-[#1F2937] p-6" style={{ backgroundColor: '#111827' }}>
         <div className="text-center text-[#9CA3AF] space-y-2">
-          <p className="text-sm">Click on a volatility band, asset, or signal to inspect details.</p>
+          <p className="text-sm">Click on a volatility band or asset to inspect details.</p>
         </div>
       </div>
     );
   }
 
-  // Signal Inspector
+  // Signal Inspector - now shown in NewsPanel, not here
   if (selectedSignal) {
     return (
-      <div className="h-full bg-[#111827] rounded-none p-6 space-y-4 overflow-y-auto border border-[#1F2937] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
-        <div className="flex items-start justify-between">
-          <div>
-            <Badge variant="outline" className="mb-2">
-              {selectedSignal.type.toUpperCase()}
-            </Badge>
-            <h2 className="text-xl font-bold text-[#E5E7EB]">{selectedSignal.title}</h2>
-            <p className="text-sm text-muted-foreground font-mono">{selectedSignal.date}</p>
-          </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold mb-2">Importance</h3>
-            <Badge variant={
-              selectedSignal.importance === 'high' ? 'destructive' :
-              selectedSignal.importance === 'medium' ? 'default' : 'secondary'
-            }>
-              {selectedSignal.importance.toUpperCase()}
-            </Badge>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold mb-2">Description</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {selectedSignal.description}
-            </p>
-          </div>
-
-          {selectedSignal.externalUrl && (
-            <Button variant="outline" className="w-full" asChild>
-              <a href={selectedSignal.externalUrl} target="_blank" rel="noopener noreferrer">
-                Open Source
-              </a>
-            </Button>
-          )}
+      <div className="h-full rounded-none p-6 space-y-4 overflow-y-auto border-l border-[#1F2937]" style={{ backgroundColor: '#111827' }}>
+        <div className="text-center text-[#9CA3AF] space-y-2">
+          <p className="text-sm">Signal details shown in the news panel below the chart.</p>
         </div>
       </div>
     );
@@ -213,7 +177,7 @@ export function InspectorPanel({
     const position = navSeries.find(s => s.date === currentDate)?.value || 0;
 
     return (
-      <div className="h-full bg-[#111827] rounded-none p-6 space-y-4 overflow-y-auto border border-[#1F2937] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+      <div className="h-full rounded-none p-6 space-y-4 overflow-y-auto border-l border-[#1F2937]" style={{ backgroundColor: '#111827' }}>
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-xl font-bold text-[#E5E7EB] mb-1">{selectedAsset.name}</h2>
@@ -534,7 +498,7 @@ export function InspectorPanel({
     const fedRate = getFedRateForDate(currentDate, FED_RATES);
 
     return (
-      <div className="h-full bg-[#15232F] rounded-lg flex flex-col overflow-hidden border border-[rgba(255,255,255,0.05)] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+      <div className="h-full rounded-none flex flex-col overflow-hidden border-l border-[#1F2937]" style={{ backgroundColor: '#111827' }}>
         <div className="p-6 space-y-4 border-b border-[rgba(255,255,255,0.05)]">
           <div className="flex items-start justify-between">
             <div>
