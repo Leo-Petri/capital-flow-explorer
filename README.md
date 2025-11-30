@@ -1,6 +1,9 @@
-# Capital Flow Explorer
+# Oscilla
+**Team Name: Maybe AI can solve this**
 
-See how your money moves. Capital Flow Explorer shows where your portfolio's money flows across different risk levels over time. Connect the dots between market news, interest rates, and your investments in one clear view.
+See how your money moves. Oscilla shows where your portfolio's money flows across different risk groups over time. Connect the dots between market news, interest rates, and your investments in one clear view.
+
+---
 
 ## 0. Quick start
 
@@ -19,7 +22,7 @@ For working with the data pipeline (Python sandbox):
 
 1. (Recommended) Create a virtual environment and install all dependencies:
 
-   ```sh
+   ```shgit c
    python -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    pip install -r python_sandbox/requirements.txt
@@ -35,13 +38,18 @@ For working with the data pipeline (Python sandbox):
 
 The Python scripts are provided in a sandbox folder so you can easily explore and modify/extend the data pipeline as you wish.
 
+---
 ## 1. Insight Discovery
 
-**See patterns others miss.** Watch how your portfolio shifts between safe and risky investments as markets change. Assets are grouped into five risk bands (from safe to very risky), revealing how money moves across risk levels over time.
+<div align="center" style="width:100%; margin: 20px 0;">
+  <img src="logos_readme/UI/mother.png" alt="Mother UI Concept" style="max-width:100%; height:auto; min-height:260px; min-width:350px; display:block; margin:0 auto; border-radius:16px; box-shadow:0 8px 36px 0 rgba(0,0,0,0.12);"/>
+</div>
 
-**Connect events to outcomes.** News signals appear on the timeline, showing when market events happened. See how Fed rate changes, news sentiment, and market conditions line up with portfolio movements.
+Our insight discovery is primarly focused on (one important variable in finance/economics), **the interest rate** and the idea of **grouping stocks** into **bundles of similar "risk"**. The main insight for the user of Oscilla is to understand his exposure across risk bundles of assets specially with respect to changes in interest rate levels and other **financial news** (e.g. Trump Tariffs, Tech. & Big Indexes).
 
-**Understand the why.** Drill into any risk band to see which assets drove performance, when you bought or sold them, and how they contributed to overall returns.
+<div align="center" style="width:100%; margin: 20px 0;">
+  <img src="logos_readme/UI/insight.png" alt="Insight Discovery" style="max-width:100%; height:auto; min-height:260px; min-width:350px; display:block; margin:0 auto; border-radius:16px; box-shadow:0 8px 36px 0 rgba(0,0,0,0.12);"/>
+</div>
 
 ---
 
@@ -51,12 +59,7 @@ Built with **React** and **TypeScript** for a fast, responsive experience—even
 
 | <div style="text-align:center">Frontend<br/><span style="font-size:13px; font-weight:normal; color:#888;">(UI/UX)</span></div> | <div style="text-align:center">Data Processing &amp; AI<br/><span style="font-size:13px; font-weight:normal; color:#888;">(Automation &amp; Analytics)</span></div> | <div style="text-align:center">Deployment<br/><span style="font-size:13px; font-weight:normal; color:#888;">(Cloud Hosting)</span></div> | <div style="text-align:center">Sponsors<br/><span style="font-size:13px; font-weight:normal; color:#888;">(Support)</span></div> |
 |:---:|:---:|:---:|:---:|
-| <img src="logos_readme/ts_react.png" alt="TypeScript React" style="width:68px; height:68px; object-fit:contain; margin:4px 0;"/> | <img src="logos_readme/python.png" alt="Python" style="width:68px; height:68px; object-fit:contain; margin-bottom:4px;"/><br/><img src="logos_readme/hflogo.png" alt="Hugging Face" style="width:68px; height:68px; object-fit:contain;"/> | <img src="logos_readme/vercel.png" alt="Vercel" style="width:68px; height:68px; object-fit:contain; margin:4px 0;"/> | <img src="logos_readme/loveable.png" alt="Loveable" style="width:68px; height:34px; object-fit:contain; margin:2px 0;"/><br/><img src="logos_readme/aws.png" alt="AWS" style="width:68px; height:34px; object-fit:contain; margin:2px 0;"/><br/><img src="logos_readme/openai.png" alt="OpenAI" style="width:68px; height:34px; object-fit:contain; margin:2px 0;"/> |
-|  <div style="text-align:center">Frontend<br/><span style="font-size:13px; font-weight:normal; color:#888;">(UI/UX)</span></div>  |                                    <div style="text-align:center">Data Processing &amp; AI<br/><span style="font-size:13px; font-weight:normal; color:#888;">(Automation &amp; Analytics)</span></div>                                     | <div style="text-align:center">Deployment<br/><span style="font-size:13px; font-weight:normal; color:#888;">(Cloud Hosting)</span></div> |
-| :------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------: |
-| <img src="logos_readme/ts_react.png" alt="TypeScript React" style="width:68px; height:68px; object-fit:contain; margin:4px 0;"/> | <img src="logos_readme/python.png" alt="Python" style="width:68px; height:68px; object-fit:contain; margin-bottom:4px;"/><br/><img src="logos_readme/hflogo.png" alt="Hugging Face" style="width:68px; height:68px; object-fit:contain;"/> |           <img src="logos_readme/vercel.png" alt="Vercel" style="width:68px; height:68px; object-fit:contain; margin:4px 0;"/>           |
-
----
+| <img src="logos_readme/ts_react.png" alt="TypeScript React" style="width:68px; height:68px; object-fit:contain;"/> | <img src="logos_readme/python.png" alt="Python" style="width:60px; height:60px; object-fit:contain;"/><br/><img src="logos_readme/hflogo.png" alt="Hugging Face" style="width:60px; height:60px; object-fit:contain;"/> | <img src="logos_readme/vercel.png" alt="Vercel" style="width:68px; height:68px; object-fit:contain;"/> | <img src="logos_readme/aws.png" alt="AWS" style="width:60px; height:32px; object-fit:contain; margin:2px 0;"/><br/><img src="logos_readme/lovable.png" alt="Loveable" style="width:60px; height:32px; object-fit:contain; margin:2px 0;"/><br/><img src="logos_readme/openai.png" alt="OpenAI" style="width:60px; height:32px; object-fit:contain; margin:2px 0;"/> |
 
 ## 3. Visualization & Communication
 
