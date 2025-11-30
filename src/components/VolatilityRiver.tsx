@@ -386,7 +386,7 @@ export function VolatilityRiver({
           .attr('class', 'rate-line')
           .datum(validRatePoints)
           .attr('fill', 'none')
-          .attr('stroke', '#F9D649')  // Bright neon yellow
+          .attr('stroke', '#2CE6C8')  // Emerald/teal
           .attr('stroke-width', 2)    // Thin line
           .attr('d', rateLine)
           .attr('opacity', 0.9)

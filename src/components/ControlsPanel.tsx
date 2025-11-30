@@ -160,7 +160,7 @@ export function ControlsPanel({
       <div className="space-y-4">
         <h2 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Choose Financial KPI</h2>
         <div className="space-y-2">
-          <Label className="text-sm text-[#9CA3AF]">View KPI as Y-Axis</Label>
+          <Label className="text-sm text-[#9CA3AF]">Select Financial KPI</Label>
           <Select value={selectedKpi} onValueChange={(val) => onKpiChange(val as KpiId)}>
             <SelectTrigger className="rounded-none bg-[#1E293B] border-[#1F2937] text-[#E5E7EB]">
               <SelectValue />
@@ -185,7 +185,7 @@ export function ControlsPanel({
         {/* Fed Rate Toggle */}
         <div className="flex items-center justify-between">
           <Label htmlFor="fed-rate" className="text-sm text-[#9CA3AF] cursor-pointer">
-            Show Fed Funds Rate
+            Show Interest Rate
           </Label>
           <Switch
             id="fed-rate"
