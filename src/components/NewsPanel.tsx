@@ -10,14 +10,14 @@ interface NewsPanelProps {
 export function NewsPanel({ selectedSignal }: NewsPanelProps) {
   if (!selectedSignal) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <p className="text-sm text-[#6B7280]">Click a news signal to view details</p>
+      <div className="h-full flex items-center justify-center" style={{ backgroundColor: '#050A12' }}>
+        <p className="text-sm text-[#6B7280]">Click a news signal on the chart to view details</p>
       </div>
     );
   }
 
   return (
-    <div className="h-full p-6 space-y-4">
+    <div className="h-full p-6 space-y-4" style={{ backgroundColor: '#050A12' }}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 space-y-3">
           <div className="flex items-center gap-2 flex-wrap">

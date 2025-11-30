@@ -144,7 +144,7 @@ const Index = () => {
   const handleBandClick = (band: VolatilityBandId | null) => {
     setSelectedBand(band);
     setSelectedAsset(null);
-    setSelectedSignal(null);
+    // Don't clear selectedSignal - signals and bands are independent
   };
 
   const handleSignalClick = (signalId: string) => {
@@ -168,7 +168,7 @@ const Index = () => {
   const handleInspectorClose = () => {
     setSelectedBand(null);
     setSelectedAsset(null);
-    setSelectedSignal(null);
+    // Don't clear selectedSignal - it's managed independently in the news panel
   };
 
   return (

@@ -143,22 +143,13 @@ export function InspectorPanel({
   stackedData,
 }: InspectorPanelProps) {
 
-  if (!selectedBand && !selectedAsset && !selectedSignal) {
+  // Only show empty state if neither band nor asset is selected
+  // (Signals are handled separately in NewsPanel and don't affect this panel)
+  if (!selectedBand && !selectedAsset) {
     return (
       <div className="h-full rounded-none border-l border-[#1F2937] p-6" style={{ backgroundColor: '#111827' }}>
         <div className="text-center text-[#9CA3AF] space-y-2">
           <p className="text-sm">Click on a volatility band or asset to inspect details.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Signal Inspector - now shown in NewsPanel, not here
-  if (selectedSignal) {
-    return (
-      <div className="h-full rounded-none p-6 space-y-4 overflow-y-auto border-l border-[#1F2937]" style={{ backgroundColor: '#111827' }}>
-        <div className="text-center text-[#9CA3AF] space-y-2">
-          <p className="text-sm">Signal details shown in the news panel below the chart.</p>
         </div>
       </div>
     );
