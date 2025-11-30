@@ -198,7 +198,7 @@ export function ControlsPanel({
             {/* Neutral Signals */}
             <div className="flex items-center justify-between">
               <Label htmlFor="neutral-signals" className="text-xs text-[#9CA3AF] cursor-pointer flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#F97316]" />
+                <span className="w-2 h-2 rounded-full bg-[#9CA3AF]" />
                 Neutral
               </Label>
               <Switch
