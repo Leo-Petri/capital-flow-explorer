@@ -33,6 +33,16 @@ const Index = () => {
   const [showGoodSignals, setShowGoodSignals] = useState(true);
   const [showNeutralSignals, setShowNeutralSignals] = useState(true);
   const [showBadSignals, setShowBadSignals] = useState(true);
+  
+  // Topic filters (matching CSV topic column values)
+  const [showMacroSignals, setShowMacroSignals] = useState(true);
+  const [showGeopoliticalSignals, setShowGeopoliticalSignals] = useState(true);
+  const [showFinancialAssetsSignals, setShowFinancialAssetsSignals] = useState(true);
+  
+  // Importance filters (matching CSV importance column values)
+  const [showHighImportance, setShowHighImportance] = useState(true);
+  const [showMediumImportance, setShowMediumImportance] = useState(true);
+  const [showLowImportance, setShowLowImportance] = useState(true);
   const [selectedBand, setSelectedBand] = useState<VolatilityBandId | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
@@ -209,6 +219,18 @@ const Index = () => {
           onShowNeutralSignalsChange={setShowNeutralSignals}
           showBadSignals={showBadSignals}
           onShowBadSignalsChange={setShowBadSignals}
+          showMacroSignals={showMacroSignals}
+          onShowMacroSignalsChange={setShowMacroSignals}
+          showGeopoliticalSignals={showGeopoliticalSignals}
+          onShowGeopoliticalSignalsChange={setShowGeopoliticalSignals}
+          showFinancialAssetsSignals={showFinancialAssetsSignals}
+          onShowFinancialAssetsSignalsChange={setShowFinancialAssetsSignals}
+          showHighImportance={showHighImportance}
+          onShowHighImportanceChange={setShowHighImportance}
+          showMediumImportance={showMediumImportance}
+          onShowMediumImportanceChange={setShowMediumImportance}
+          showLowImportance={showLowImportance}
+          onShowLowImportanceChange={setShowLowImportance}
         />
       </div>
 
@@ -232,6 +254,12 @@ const Index = () => {
               showGoodSignals={showGoodSignals}
               showNeutralSignals={showNeutralSignals}
               showBadSignals={showBadSignals}
+              showMacroSignals={showMacroSignals}
+              showGeopoliticalSignals={showGeopoliticalSignals}
+              showFinancialAssetsSignals={showFinancialAssetsSignals}
+              showHighImportance={showHighImportance}
+              showMediumImportance={showMediumImportance}
+              showLowImportance={showLowImportance}
             />
           </div>
         </div>

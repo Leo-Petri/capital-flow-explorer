@@ -50,20 +50,28 @@ export interface RatePoint {
 
 // CSV row interfaces for different formats
 interface TechStockCsvRow {
-  date: string;
-  title: string;
+  timestamp: string;
+  new: string; // Note: 'new' is a reserved word, but it's the column name
   link: string;
   sentiment: string;
   sentiment_score: string;
+  importance: string;
+  importance_score: string;
+  topic: string;
+  topic_score: string;
 }
 
 interface FinancialNewsCsvRow {
   timestamp: string;
   new: string; // Note: 'new' is a reserved word, but it's the column name
-  source: string;
+  source?: string;
   link: string;
-  sentiment?: string;
-  sentiment_score?: string;
+  sentiment: string;
+  sentiment_score: string;
+  importance: string;
+  importance_score: string;
+  topic: string;
+  topic_score: string;
 }
 
 // Helper function to parse CSV with quoted fields
@@ -87,17 +95,21 @@ function parseCSVLine(line: string): string[] {
   return values;
 }
 
-// Parse tech stock news CSV (date, title, link, sentiment, sentiment_score)
+// Parse tech stock news CSV (timestamp, new, link, sentiment, sentiment_score, importance, importance_score, topic, topic_score)
 function parseTechStockCSV(csvText: string): TechStockCsvRow[] {
   const lines = csvText.trim().split('\n');
   if (lines.length < 2) return [];
 
   const headers = lines[0].split(',').map(h => h.trim());
-  const dateIdx = headers.indexOf('date');
-  const titleIdx = headers.indexOf('title');
+  const timestampIdx = headers.indexOf('timestamp');
+  const newIdx = headers.indexOf('new');
   const linkIdx = headers.indexOf('link');
   const sentimentIdx = headers.indexOf('sentiment');
   const sentimentScoreIdx = headers.indexOf('sentiment_score');
+  const importanceIdx = headers.indexOf('importance');
+  const importanceScoreIdx = headers.indexOf('importance_score');
+  const topicIdx = headers.indexOf('topic');
+  const topicScoreIdx = headers.indexOf('topic_score');
 
   const rows: TechStockCsvRow[] = [];
   for (let i = 1; i < lines.length; i++) {
@@ -106,13 +118,17 @@ function parseTechStockCSV(csvText: string): TechStockCsvRow[] {
 
     const values = parseCSVLine(line);
 
-    if (values.length >= 5) {
+    if (values.length >= 3) {
       rows.push({
-        date: values[dateIdx] || '',
-        title: values[titleIdx] || '',
+        timestamp: values[timestampIdx] || '',
+        new: values[newIdx] || '',
         link: values[linkIdx] || '',
-        sentiment: values[sentimentIdx] || '',
-        sentiment_score: values[sentimentScoreIdx] || '0',
+        sentiment: sentimentIdx >= 0 ? values[sentimentIdx] : '',
+        sentiment_score: sentimentScoreIdx >= 0 ? values[sentimentScoreIdx] : '0',
+        importance: importanceIdx >= 0 ? values[importanceIdx] : '',
+        importance_score: importanceScoreIdx >= 0 ? values[importanceScoreIdx] : '0',
+        topic: topicIdx >= 0 ? values[topicIdx] : '',
+        topic_score: topicScoreIdx >= 0 ? values[topicScoreIdx] : '0',
       });
     }
   }
@@ -120,7 +136,7 @@ function parseTechStockCSV(csvText: string): TechStockCsvRow[] {
   return rows;
 }
 
-// Parse financial news CSV (timestamp, new, source, link, sentiment, sentiment_score)
+// Parse financial news CSV (timestamp, new, source, link, sentiment, sentiment_score, importance, importance_score, topic, topic_score)
 function parseFinancialNewsCSV(csvText: string): FinancialNewsCsvRow[] {
   const lines = csvText.trim().split('\n');
   if (lines.length < 2) return [];
@@ -132,6 +148,10 @@ function parseFinancialNewsCSV(csvText: string): FinancialNewsCsvRow[] {
   const linkIdx = headers.indexOf('link');
   const sentimentIdx = headers.indexOf('sentiment');
   const sentimentScoreIdx = headers.indexOf('sentiment_score');
+  const importanceIdx = headers.indexOf('importance');
+  const importanceScoreIdx = headers.indexOf('importance_score');
+  const topicIdx = headers.indexOf('topic');
+  const topicScoreIdx = headers.indexOf('topic_score');
 
   const rows: FinancialNewsCsvRow[] = [];
   for (let i = 1; i < lines.length; i++) {
@@ -140,14 +160,18 @@ function parseFinancialNewsCSV(csvText: string): FinancialNewsCsvRow[] {
 
     const values = parseCSVLine(line);
 
-    if (values.length >= 4) {
+    if (values.length >= 3) {
       rows.push({
         timestamp: values[timestampIdx] || '',
         new: values[newIdx] || '',
-        source: values[sourceIdx] || '',
+        source: sourceIdx >= 0 ? values[sourceIdx] : undefined,
         link: values[linkIdx] || '',
-        sentiment: sentimentIdx >= 0 ? values[sentimentIdx] : undefined,
-        sentiment_score: sentimentScoreIdx >= 0 ? values[sentimentScoreIdx] : undefined,
+        sentiment: sentimentIdx >= 0 ? values[sentimentIdx] : '',
+        sentiment_score: sentimentScoreIdx >= 0 ? values[sentimentScoreIdx] : '0',
+        importance: importanceIdx >= 0 ? values[importanceIdx] : '',
+        importance_score: importanceScoreIdx >= 0 ? values[importanceScoreIdx] : '0',
+        topic: topicIdx >= 0 ? values[topicIdx] : '',
+        topic_score: topicScoreIdx >= 0 ? values[topicScoreIdx] : '0',
       });
     }
   }
@@ -155,7 +179,17 @@ function parseFinancialNewsCSV(csvText: string): FinancialNewsCsvRow[] {
   return rows;
 }
 
-// Helper function to determine signal type from title and sentiment
+// Helper function to determine signal type from topic (from CSV classification)
+function determineSignalTypeFromTopic(topic: string): 'macro' | 'geopolitical' | 'rates' | 'custom' {
+  const upperTopic = topic.toUpperCase();
+  if (upperTopic === 'GEOPOLITICAL') return 'geopolitical';
+  if (upperTopic === 'RATES' || upperTopic.includes('RATE')) return 'rates';
+  if (upperTopic === 'FINANCIAL ASSETS') return 'custom';
+  // Default to macro for general market/economy news
+  return 'macro';
+}
+
+// Fallback function to determine signal type from title and sentiment (for backward compatibility)
 function determineSignalType(title: string, sentiment: string): 'macro' | 'geopolitical' | 'rates' | 'custom' {
   const lowerTitle = title.toLowerCase();
   
@@ -178,6 +212,14 @@ function determineSignalType(title: string, sentiment: string): 'macro' | 'geopo
   
   // Default to macro for general market/economy news
   return 'macro';
+}
+
+// Helper function to map importance string from CSV to Signal importance type
+function mapImportanceFromCSV(importance: string): 'low' | 'medium' | 'high' {
+  const upperImportance = importance.toUpperCase();
+  if (upperImportance === 'HIGH') return 'high';
+  if (upperImportance === 'MEDIUM') return 'medium';
+  return 'low'; // Default to low for LOW or unknown
 }
 
 // Helper function to determine importance from sentiment score
@@ -240,16 +282,33 @@ function formatDateForSignal(dateStr: string): string {
 
 // Transform tech stock CSV row to Signal
 function transformTechStockRowToSignal(row: TechStockCsvRow, index: number): Signal {
-  const sentimentScore = parseFloat(row.sentiment_score) || 0;
-  const dateFormatted = formatDateForSignal(row.date);
+  const dateFormatted = formatDateForSignal(row.timestamp);
+  const newsText = row.new;
+  
+  // Use importance from CSV, fallback to sentiment_score-based if not available
+  let importance: 'low' | 'medium' | 'high';
+  if (row.importance) {
+    importance = mapImportanceFromCSV(row.importance);
+  } else {
+    const sentimentScore = parseFloat(row.sentiment_score) || 0;
+    importance = determineImportance(sentimentScore);
+  }
+  
+  // Use topic from CSV to determine signal type, fallback to text-based if not available
+  let signalType: 'macro' | 'geopolitical' | 'rates' | 'custom';
+  if (row.topic) {
+    signalType = determineSignalTypeFromTopic(row.topic);
+  } else {
+    signalType = determineSignalType(newsText, row.sentiment);
+  }
   
   return {
     id: `signal-tech-${index + 1}`,
     date: dateFormatted,
-    type: determineSignalType(row.title, row.sentiment),
-    title: row.title,
-    description: row.title, // Use title as description
-    importance: determineImportance(sentimentScore),
+    type: signalType,
+    title: newsText.length > 100 ? newsText.substring(0, 100) + '...' : newsText,
+    description: newsText,
+    importance,
     color: determineColor(row.sentiment),
     externalUrl: row.link || undefined,
   };
@@ -260,13 +319,23 @@ function transformFinancialNewsRowToSignal(row: FinancialNewsCsvRow, index: numb
   const dateFormatted = formatDateForSignal(row.timestamp);
   const newsText = row.new; // 'new' is the column name in the CSV
   
-  // Use sentiment_score if available, otherwise fall back to text-based importance
+  // Use importance from CSV, fallback to sentiment_score-based or text-based if not available
   let importance: 'low' | 'medium' | 'high';
-  if (row.sentiment_score) {
+  if (row.importance) {
+    importance = mapImportanceFromCSV(row.importance);
+  } else if (row.sentiment_score) {
     const sentimentScore = parseFloat(row.sentiment_score) || 0;
     importance = determineImportance(sentimentScore);
   } else {
     importance = determineImportanceFromText(newsText);
+  }
+  
+  // Use topic from CSV to determine signal type, fallback to text-based if not available
+  let signalType: 'macro' | 'geopolitical' | 'rates' | 'custom';
+  if (row.topic) {
+    signalType = determineSignalTypeFromTopic(row.topic);
+  } else {
+    signalType = determineSignalType(newsText, row.sentiment || '');
   }
   
   // Determine color from sentiment, default to red if not available
@@ -275,7 +344,7 @@ function transformFinancialNewsRowToSignal(row: FinancialNewsCsvRow, index: numb
   return {
     id: `signal-financial-${index + 1}`,
     date: dateFormatted,
-    type: determineSignalType(newsText, row.sentiment || ''),
+    type: signalType,
     title: newsText.length > 100 ? newsText.substring(0, 100) + '...' : newsText,
     description: newsText,
     importance,
@@ -370,20 +439,28 @@ export async function loadSignalsFromCSV(): Promise<Signal[]> {
     
     // Helper function to sample well-distributed signals by importance
     function sampleSignalsByImportance(signals: Signal[], maxCount: number): Signal[] {
-      // Filter to only high and medium importance
-      const filtered = signals.filter(s => s.importance === 'high' || s.importance === 'medium');
+      // Separate signals: high/medium importance, and neutral (gray) signals
+      const highMediumSignals = signals.filter(s => (s.importance === 'high' || s.importance === 'medium') && s.color !== 'gray');
+      const neutralSignals = signals.filter(s => s.color === 'gray');
       
-      if (filtered.length <= maxCount) {
-        return filtered;
+      // Calculate how many neutral signals to include (2-3 neutral signals)
+      const neutralCount = Math.min(3, neutralSignals.length);
+      const remainingCount = maxCount - neutralCount;
+      
+      if (highMediumSignals.length <= remainingCount) {
+        // If we have space, include all high/medium signals plus neutral signals
+        const combined = [...highMediumSignals, ...neutralSignals.slice(0, neutralCount)];
+        combined.sort((a, b) => a.date.localeCompare(b.date));
+        return combined;
       }
       
-      // Separate by importance
-      const highImportance = filtered.filter(s => s.importance === 'high');
-      const mediumImportance = filtered.filter(s => s.importance === 'medium');
+      // Separate by importance for high/medium signals
+      const highImportance = highMediumSignals.filter(s => s.importance === 'high');
+      const mediumImportance = highMediumSignals.filter(s => s.importance === 'medium');
       
       // Calculate distribution: roughly 60% high, 40% medium
-      const highCount = Math.min(Math.ceil(maxCount * 0.6), highImportance.length);
-      const mediumCount = Math.min(maxCount - highCount, mediumImportance.length);
+      const highCount = Math.min(Math.ceil(remainingCount * 0.6), highImportance.length);
+      const mediumCount = Math.min(remainingCount - highCount, mediumImportance.length);
       
       // Sample evenly distributed across date range
       function sampleEvenly<T extends { date: string }>(items: T[], count: number): T[] {
@@ -407,9 +484,10 @@ export async function loadSignalsFromCSV(): Promise<Signal[]> {
       
       const sampledHigh = sampleEvenly(highImportance, highCount);
       const sampledMedium = sampleEvenly(mediumImportance, mediumCount);
+      const sampledNeutral = sampleEvenly(neutralSignals, neutralCount);
       
       // Combine and sort by date
-      const combined = [...sampledHigh, ...sampledMedium];
+      const combined = [...sampledHigh, ...sampledMedium, ...sampledNeutral];
       combined.sort((a, b) => a.date.localeCompare(b.date));
       
       return combined;
@@ -428,8 +506,8 @@ export async function loadSignalsFromCSV(): Promise<Signal[]> {
         
         // Sort by date first, then sample
         techStockSignals.sort((a, b) => a.date.localeCompare(b.date));
-        const sampledTechSignals = sampleSignalsByImportance(techStockSignals, 8); // Sample 8 signals
-        console.log(`📊 Sampled ${sampledTechSignals.length} tech signals (${sampledTechSignals.filter(s => s.importance === 'high').length} high, ${sampledTechSignals.filter(s => s.importance === 'medium').length} medium)`);
+        const sampledTechSignals = sampleSignalsByImportance(techStockSignals, 10); // Sample 10 signals (increased from 8)
+        console.log(`📊 Sampled ${sampledTechSignals.length} tech signals (${sampledTechSignals.filter(s => s.importance === 'high').length} high, ${sampledTechSignals.filter(s => s.importance === 'medium').length} medium, ${sampledTechSignals.filter(s => s.color === 'gray').length} neutral)`);
         allSignals.push(...sampledTechSignals);
       } catch (error) {
         console.error('❌ Failed to parse tech stock CSV:', error);
@@ -449,8 +527,9 @@ export async function loadSignalsFromCSV(): Promise<Signal[]> {
         
         // Sort by date first, then sample
         financialNewsSignals.sort((a, b) => a.date.localeCompare(b.date));
-        const sampledFinancialSignals = sampleSignalsByImportance(financialNewsSignals, 8); // Sample 8 signals
-        console.log(`📊 Sampled ${sampledFinancialSignals.length} financial signals (${sampledFinancialSignals.filter(s => s.importance === 'high').length} high, ${sampledFinancialSignals.filter(s => s.importance === 'medium').length} medium)`);
+        const sampledFinancialSignals = sampleSignalsByImportance(financialNewsSignals, 11); // Sample 11 signals (increased from 8)
+        const neutralCount = sampledFinancialSignals.filter(s => s.color === 'gray').length;
+        console.log(`📊 Sampled ${sampledFinancialSignals.length} financial signals (${sampledFinancialSignals.filter(s => s.importance === 'high').length} high, ${sampledFinancialSignals.filter(s => s.importance === 'medium').length} medium, ${neutralCount} neutral)`);
         allSignals.push(...sampledFinancialSignals);
       } catch (error) {
         console.error('❌ Failed to parse financial news CSV:', error);

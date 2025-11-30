@@ -18,6 +18,14 @@ interface VolatilityRiverProps {
   showGoodSignals: boolean;
   showNeutralSignals: boolean;
   showBadSignals: boolean;
+  // Topic filters (matching CSV topic column: "Macro", "Geopolitical", "Financial Assets")
+  showMacroSignals?: boolean;
+  showGeopoliticalSignals?: boolean;
+  showFinancialAssetsSignals?: boolean;
+  // Importance filters (matching CSV importance column: "Low", "Medium", "High")
+  showHighImportance?: boolean;
+  showMediumImportance?: boolean;
+  showLowImportance?: boolean;
 }
 
 // Institutional quant-grade muted luminous palette with solid, modern opacity
@@ -46,6 +54,12 @@ export function VolatilityRiver({
   showGoodSignals,
   showNeutralSignals,
   showBadSignals,
+  showMacroSignals = true,
+  showGeopoliticalSignals = true,
+  showFinancialAssetsSignals = true,
+  showHighImportance = true,
+  showMediumImportance = true,
+  showLowImportance = true,
 }: VolatilityRiverProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -426,12 +440,42 @@ export function VolatilityRiver({
     }
 
     // Signal markers - pre-compute signal positions for better performance
-    // Apply filtering based on showNewsSignals and per-type toggles
+    // Apply filtering based on showNewsSignals, sentiment (color), topic, and importance
     const filteredSignals = showNewsSignals ? signals.filter(signal => {
-      if (signal.color === 'green') return showGoodSignals;
-      if (signal.color === 'gray') return showNeutralSignals;
-      if (signal.color === 'red') return showBadSignals;
-      return false;
+      // Filter by sentiment (color)
+      let passesSentimentFilter = false;
+      if (signal.color === 'green') passesSentimentFilter = showGoodSignals;
+      else if (signal.color === 'gray') passesSentimentFilter = showNeutralSignals;
+      else if (signal.color === 'red') passesSentimentFilter = showBadSignals;
+      if (!passesSentimentFilter) return false;
+      
+      // Filter by topic (matching CSV topic column values)
+      // Map signal.type to CSV topic values:
+      // - 'macro' -> "Macro"
+      // - 'geopolitical' -> "Geopolitical"
+      // - 'custom' -> "Financial Assets"
+      // - 'rates' -> "Macro" (rates are typically macro-economic)
+      let passesTopicFilter = false;
+      if (signal.type === 'macro' || signal.type === 'rates') {
+        passesTopicFilter = showMacroSignals;
+      } else if (signal.type === 'geopolitical') {
+        passesTopicFilter = showGeopoliticalSignals;
+      } else if (signal.type === 'custom') {
+        passesTopicFilter = showFinancialAssetsSignals;
+      } else {
+        passesTopicFilter = true; // Default: show if type is unknown
+      }
+      if (!passesTopicFilter) return false;
+      
+      // Filter by importance (matching CSV importance column values: "Low", "Medium", "High")
+      let passesImportanceFilter = false;
+      if (signal.importance === 'high') passesImportanceFilter = showHighImportance;
+      else if (signal.importance === 'medium') passesImportanceFilter = showMediumImportance;
+      else if (signal.importance === 'low') passesImportanceFilter = showLowImportance;
+      else passesImportanceFilter = true; // Default: show if importance is unknown
+      if (!passesImportanceFilter) return false;
+      
+      return true;
     }) : [];
 
     const signalGroup = g.append('g')
@@ -445,7 +489,7 @@ export function VolatilityRiver({
       custom: '#8B5CF6',
       green: '#22C55E',   // Green for positive/good news
       red: '#EF4444',     // Red for negative/bad news
-      gray: '#F97316',    // Orange for neutral news
+      gray: '#9CA3AF',    // Gray for neutral news
     };
 
     // Pre-compute signal positions using Map lookups instead of find()
@@ -724,7 +768,7 @@ export function VolatilityRiver({
       }
     }
 
-  }, [data, currentDateIndex, selectedBand, signals, selectedSignal, showFedRate, fedRates, showNewsSignals, onBandClick, onSignalClick, onDateIndexChange]);
+  }, [data, currentDateIndex, selectedBand, signals, selectedSignal, showFedRate, fedRates, showNewsSignals, showGoodSignals, showNeutralSignals, showBadSignals, showMacroSignals, showGeopoliticalSignals, showFinancialAssetsSignals, showHighImportance, showMediumImportance, showLowImportance, onBandClick, onSignalClick, onDateIndexChange]);
 
   return (
     <div ref={containerRef} className="w-full h-full bg-transparent rounded-lg">
