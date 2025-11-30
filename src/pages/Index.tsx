@@ -164,7 +164,7 @@ const Index = () => {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: '#0F1A24' }}>
+    <div className="flex h-screen w-full overflow-hidden" style={{ backgroundColor: '#0D1117' }}>
       {/* Left Panel - Controls */}
       <div className="w-80 flex-shrink-0">
         <ControlsPanel
@@ -185,7 +185,7 @@ const Index = () => {
 
       {/* Center Panel - Visualization */}
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full h-full bg-[#15232F] rounded-lg border border-[rgba(255,255,255,0.05)] shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-6">
+        <div className="w-full h-full bg-[#111827] rounded-none border border-[#1F2937] shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-6">
           <VolatilityRiver
             data={stackedData}
             currentDateIndex={currentDateIndex}

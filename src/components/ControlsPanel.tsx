@@ -69,7 +69,7 @@ export function ControlsPanel({
   onShowFedRateChange,
 }: ControlsPanelProps) {
   return (
-    <div className="h-full bg-[#15232F] rounded-lg p-6 space-y-8 overflow-y-auto border border-[rgba(255,255,255,0.05)] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+    <div className="h-full bg-[#0D1117] rounded-none p-6 space-y-8 overflow-y-auto border border-[#1F2937] shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
       {/* Logo and Branding */}
       <div className="flex flex-col items-center text-center space-y-2 pb-2">
         <img 
@@ -77,7 +77,7 @@ export function ControlsPanel({
           alt="Oscilla" 
           className="h-8 w-auto object-contain opacity-90"
         />
-        <p className="text-xs text-[rgba(255,255,255,0.65)] font-light tracking-wide">
+        <p className="text-xs text-[#9CA3AF] font-normal tracking-wide uppercase" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
           Dynamic Wealth Complexity Mapping
         </p>
       </div>
@@ -85,18 +85,18 @@ export function ControlsPanel({
       {/* Timeline */}
       <div className="space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-[rgba(255,255,255,0.90)] uppercase tracking-wider mb-3">Timeline</h2>
+          <h2 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Timeline</h2>
           <div className="flex items-center gap-2 mb-3">
             <Button
               size="sm"
               variant="outline"
               onClick={onPlayPause}
-              className="w-10 h-10 p-0 bg-[#1E3242] hover:bg-[#254155] border-[rgba(255,255,255,0.1)]"
+              className="w-10 h-10 p-0 rounded-none bg-[#1E293B] hover:bg-[#334155] border-[#1F2937]"
             >
               {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
             <div className="flex-1">
-              <p className="text-sm font-mono text-[rgba(255,255,255,0.70)]">
+              <p className="text-sm font-mono text-[#E5E7EB]">
                 {formatDate(currentDate)}
               </p>
             </div>
@@ -113,13 +113,13 @@ export function ControlsPanel({
 
       {/* View Filters */}
       <div className="space-y-4">
-        <h2 className="text-sm font-semibold text-[rgba(255,255,255,0.90)] uppercase tracking-wider mb-3">View</h2>
+        <h2 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">View</h2>
         <div className="flex gap-2">
           <Button
             size="sm"
             variant={filterMode === 'all' ? 'default' : 'outline'}
             onClick={() => onFilterModeChange('all')}
-            className={`flex-1 ${filterMode === 'all' ? 'bg-[#4DA3F7] hover:bg-[#3B8DE0] text-[#0F1A24]' : 'bg-[#1E3242] hover:bg-[#254155] border-[rgba(255,255,255,0.1)]'}`}
+            className={`flex-1 rounded-none ${filterMode === 'all' ? 'bg-[#4DA3F7] hover:bg-[#3B8DE0] text-[#0D1117]' : 'bg-[#1E293B] hover:bg-[#334155] border-[#1F2937] text-[#E5E7EB]'}`}
           >
             All
           </Button>
@@ -127,7 +127,7 @@ export function ControlsPanel({
             size="sm"
             variant={filterMode === 'liquid' ? 'default' : 'outline'}
             onClick={() => onFilterModeChange('liquid')}
-            className={`flex-1 ${filterMode === 'liquid' ? 'bg-[#4DA3F7] hover:bg-[#3B8DE0] text-[#0F1A24]' : 'bg-[#1E3242] hover:bg-[#254155] border-[rgba(255,255,255,0.1)]'}`}
+            className={`flex-1 rounded-none ${filterMode === 'liquid' ? 'bg-[#4DA3F7] hover:bg-[#3B8DE0] text-[#0D1117]' : 'bg-[#1E293B] hover:bg-[#334155] border-[#1F2937] text-[#E5E7EB]'}`}
           >
             Liquid
           </Button>
@@ -135,7 +135,7 @@ export function ControlsPanel({
             size="sm"
             variant={filterMode === 'illiquid' ? 'default' : 'outline'}
             onClick={() => onFilterModeChange('illiquid')}
-            className={`flex-1 ${filterMode === 'illiquid' ? 'bg-[#4DA3F7] hover:bg-[#3B8DE0] text-[#0F1A24]' : 'bg-[#1E3242] hover:bg-[#254155] border-[rgba(255,255,255,0.1)]'}`}
+            className={`flex-1 rounded-none ${filterMode === 'illiquid' ? 'bg-[#4DA3F7] hover:bg-[#3B8DE0] text-[#0D1117]' : 'bg-[#1E293B] hover:bg-[#334155] border-[#1F2937] text-[#E5E7EB]'}`}
           >
             Illiquid
           </Button>
@@ -144,16 +144,16 @@ export function ControlsPanel({
 
       {/* KPI Selector */}
       <div className="space-y-4">
-        <h2 className="text-sm font-semibold text-[rgba(255,255,255,0.90)] uppercase tracking-wider mb-3">KPI</h2>
+        <h2 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">KPI</h2>
         <div className="space-y-2">
-          <Label className="text-sm text-[rgba(255,255,255,0.70)]">View KPI as Y-Axis</Label>
+          <Label className="text-sm text-[#9CA3AF]">View KPI as Y-Axis</Label>
           <Select value={selectedKpi} onValueChange={(val) => onKpiChange(val as KpiId)}>
-            <SelectTrigger>
+            <SelectTrigger className="rounded-none bg-[#1E293B] border-[#1F2937] text-[#E5E7EB]">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-none bg-[#111827] border-[#1F2937]">
               {Object.entries(KPI_LABELS).map(([key, label]) => (
-                <SelectItem key={key} value={key}>
+                <SelectItem key={key} value={key} className="text-[#E5E7EB]">
                   {label}
                 </SelectItem>
               ))}
@@ -164,9 +164,9 @@ export function ControlsPanel({
 
       {/* Fed Rate Toggle */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-[rgba(255,255,255,0.90)] uppercase tracking-wider mb-3">Overlays</h2>
+        <h2 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Overlays</h2>
         <div className="flex items-center justify-between">
-          <Label htmlFor="fed-rate" className="text-sm text-[rgba(255,255,255,0.70)] cursor-pointer">
+          <Label htmlFor="fed-rate" className="text-sm text-[#9CA3AF] cursor-pointer">
             Show Fed Funds Rate
           </Label>
           <Switch

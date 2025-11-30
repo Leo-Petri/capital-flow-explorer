@@ -8,116 +8,137 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* QPLIX Dark Mode - Core Colors */
-    --background: 210 30% 10%;           /* #0F1A24 */
-    --foreground: 0 0% 90%;               /* rgba(255,255,255,0.90) */
+    /* Institutional Quant-Grade Dark Mode - Core Colors */
+    --background: 217 33% 7%;             /* #0D1117 deeper black */
+    --foreground: 210 17% 91%;            /* #E5E7EB main text */
 
-    --card: 210 28% 15%;                  /* #15232F */
-    --card-foreground: 0 0% 90%;
+    --card: 217 19% 11%;                  /* #111827 darker graph container */
+    --card-foreground: 210 17% 91%;       /* #E5E7EB */
 
-    --popover: 210 28% 15%;
-    --popover-foreground: 0 0% 90%;
+    --popover: 217 19% 11%;               /* #111827 */
+    --popover-foreground: 210 17% 91%;
 
-    --primary: 210 95% 68%;               /* #4DA3F7 */
-    --primary-foreground: 210 30% 10%;
+    --primary: 210 95% 68%;               /* #4DA3F7 keep QPLIX blue */
+    --primary-foreground: 217 33% 7%;     /* #0D1117 */
 
-    --secondary: 210 25% 20%;             /* #1E3242 */
-    --secondary-foreground: 0 0% 90%;
+    --secondary: 217 25% 16%;             /* #1E293B darker matte */
+    --secondary-foreground: 210 17% 91%;
 
-    --muted: 210 25% 20%;
-    --muted-foreground: 0 0% 55%;         /* rgba(255,255,255,0.55) */
+    --muted: 217 25% 16%;                 /* #1E293B */
+    --muted-foreground: 218 11% 65%;      /* #9CA3AF secondary text */
 
     --accent: 210 95% 68%;                /* #4DA3F7 */
-    --accent-foreground: 210 30% 10%;
+    --accent-foreground: 217 33% 7%;
 
     --destructive: 0 65% 50%;
-    --destructive-foreground: 0 0% 90%;
+    --destructive-foreground: 210 17% 91%;
 
-    --border: 0 0% 5%;                    /* rgba(255,255,255,0.05) */
-    --input: 0 0% 5%;
+    --border: 217 19% 18%;                /* #1F2937 subtle borders at 20-30% opacity */
+    --border-subtle: 217 19% 18%;         /* #1F2937 */
+    --input: 217 19% 18%;
     --ring: 210 95% 68%;
 
-    --radius: 0.375rem;                     /* 4-6px rounded corners */
+    --radius: 0.125rem;                   /* 2px - institutional sharp corners */
 
-    /* Volatility band colors - QPLIX style */
-    --volatility-cold: 200 85% 45%;       /* #0B7285 - teal */
-    --volatility-mild: 210 95% 68%;       /* #4DA3F7 - blue */
-    --volatility-warm: 45 100% 67%;       /* #FFC857 - yellow/gold */
-    --volatility-hot: 26 100% 49%;        /* #F77F00 - orange */
-    --volatility-very-hot: 355 65% 50%;   /* #D62828 - red */
+    /* Institutional Volatility Band Colors - Muted Luminous */
+    --volatility-cold: 200 45% 35%;       /* #1E3A5F deep navy */
+    --volatility-cold-light: 200 48% 45%; /* #2D5A87 soft teal */
+    --volatility-cold-dark: 200 55% 20%;  /* #0F2942 */
+    --volatility-cold-glow: 200 48% 45% / 0.4;
 
-    /* Chart specific - QPLIX neon-blue gradient */
-    --chart-background: 210 28% 15%;     /* Transparent over dark panel */
-    --chart-grid: 0 0% 6%;                /* rgba(255,255,255,0.06) */
-    --chart-text: 0 0% 70%;               /* rgba(255,255,255,0.70) */
+    --volatility-mild: 215 20% 32%;       /* #334155 slate */
+    --volatility-mild-light: 215 25% 40%; /* #475569 steel blue */
+    --volatility-mild-dark: 220 26% 18%;  /* #1E293B */
+    --volatility-mild-glow: 215 25% 40% / 0.4;
 
-    /* QPLIX Neon Blue Gradient Colors */
-    --chart-line-bright: 200 100% 78%;    /* #8EC9FF */
+    --volatility-warm: 25 90% 39%;        /* #B45309 amber */
+    --volatility-warm-light: 25 95% 51%;  /* #D97706 muted gold */
+    --volatility-warm-dark: 25 92% 32%;   /* #92400E */
+    --volatility-warm-glow: 25 95% 51% / 0.4;
+
+    --volatility-hot: 20 90% 42%;         /* #C2410C orange-red */
+    --volatility-hot-light: 20 97% 48%;   /* #EA580C */
+    --volatility-hot-dark: 17 90% 34%;    /* #9A3412 */
+    --volatility-hot-glow: 20 97% 48% / 0.4;
+
+    --volatility-very-hot: 0 62% 30%;     /* #7F1D1D plum */
+    --volatility-very-hot-light: 0 65% 41%; /* #991B1B */
+    --volatility-very-hot-dark: 0 85% 16%;  /* #450A0A crimson */
+    --volatility-very-hot-glow: 0 65% 41% / 0.4;
+
+    /* Chart specific - Institutional */
+    --chart-background: 217 19% 11%;      /* #111827 */
+    --chart-grid: 217 19% 18% / 0.25;     /* #1F2937 at 25% opacity */
+    --chart-text: 220 9% 70%;             /* #9CA3AF */
+
+    /* Neon Yellow Fed Rate */
+    --fed-rate: 45 97% 64%;               /* #F9D649 bright neon yellow */
+    --fed-rate-glow: 45 97% 64% / 0.6;
+
+    /* Chart line colors */
+    --chart-line-bright: 200 100% 78%;    /* #8EC9FF keep existing */
     --chart-line-mid: 200 85% 65%;        /* #5FAFEA */
     --chart-line-deep: 200 50% 40%;       /* #356B8A */
     --chart-dot-fill: 200 100% 88%;       /* #B9DCFF */
-    --chart-gradient-start: 200 100% 78% / 0.5;  /* rgba(142,201,255,0.50) */
-    --chart-gradient-mid: 200 100% 78% / 0.25;   /* rgba(142,201,255,0.25) */
-    --chart-gradient-end: 200 100% 78% / 0;      /* rgba(142,201,255,0.00) */
 
-    /* Sidebar */
-    --sidebar-background: 210 30% 10%;    /* #0F1A24 */
-    --sidebar-foreground: 0 0% 55%;
-    --sidebar-primary: 210 95% 68%;       /* #4DA3F7 - active */
-    --sidebar-primary-foreground: 210 30% 10%;
-    --sidebar-accent: 210 25% 20%;        /* #1E3242 */
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 0 0% 5%;
+    /* Sidebar - Institutional */
+    --sidebar-background: 217 33% 7%;     /* #0D1117 */
+    --sidebar-foreground: 218 11% 65%;    /* #9CA3AF */
+    --sidebar-primary: 210 95% 68%;       /* #4DA3F7 active */
+    --sidebar-primary-foreground: 217 33% 7%;
+    --sidebar-accent: 217 25% 16%;        /* #1E293B */
+    --sidebar-accent-foreground: 210 17% 91%;
+    --sidebar-border: 217 19% 18%;        /* #1F2937 */
     --sidebar-ring: 210 95% 68%;
 
-    /* Button states */
-    --button-base: 210 25% 20%;           /* #1E3242 */
-    --button-hover: 210 28% 25%;          /* #254155 */
-    --button-active: 210 32% 35%;         /* #2F516B */
+    /* Button states - Square & Dark Matte */
+    --button-base: 217 25% 16%;           /* #1E293B */
+    --button-hover: 215 20% 25%;          /* #334155 slightly brighter */
+    --button-active: 215 25% 35%;         /* lighter on active */
   }
 
   /* Apply dark mode by default */
   :root,
   .dark {
-    --background: 210 30% 10%;            /* #0F1A24 */
-    --foreground: 0 0% 90%;               /* rgba(255,255,255,0.90) */
+    --background: 217 33% 7%;
+    --foreground: 210 17% 91%;
 
-    --card: 210 28% 15%;                  /* #15232F */
-    --card-foreground: 0 0% 90%;
+    --card: 217 19% 11%;
+    --card-foreground: 210 17% 91%;
 
-    --popover: 210 28% 15%;
-    --popover-foreground: 0 0% 90%;
+    --popover: 217 19% 11%;
+    --popover-foreground: 210 17% 91%;
 
-    --primary: 210 95% 68%;               /* #4DA3F7 */
-    --primary-foreground: 210 30% 10%;
+    --primary: 210 95% 68%;
+    --primary-foreground: 217 33% 7%;
 
-    --secondary: 210 25% 20%;             /* #1E3242 */
-    --secondary-foreground: 0 0% 90%;
+    --secondary: 217 25% 16%;
+    --secondary-foreground: 210 17% 91%;
 
-    --muted: 210 25% 20%;
-    --muted-foreground: 0 0% 55%;         /* rgba(255,255,255,0.55) */
+    --muted: 217 25% 16%;
+    --muted-foreground: 218 11% 65%;
 
-    --accent: 210 95% 68%;                /* #4DA3F7 */
-    --accent-foreground: 210 30% 10%;
+    --accent: 210 95% 68%;
+    --accent-foreground: 217 33% 7%;
 
     --destructive: 0 65% 50%;
-    --destructive-foreground: 0 0% 90%;
+    --destructive-foreground: 210 17% 91%;
 
-    --border: 0 0% 5%;                    /* rgba(255,255,255,0.05) */
-    --input: 0 0% 5%;
+    --border: 217 19% 18%;
+    --input: 217 19% 18%;
     --ring: 210 95% 68%;
 
-    --chart-background: 210 28% 15%;
-    --chart-grid: 0 0% 6%;                /* rgba(255,255,255,0.06) */
-    --chart-text: 0 0% 70%;               /* rgba(255,255,255,0.70) */
+    --chart-background: 217 19% 11%;
+    --chart-grid: 217 19% 18% / 0.25;
+    --chart-text: 220 9% 70%;
 
-    --sidebar-background: 210 30% 10%;
-    --sidebar-foreground: 0 0% 55%;
+    --sidebar-background: 217 33% 7%;
+    --sidebar-foreground: 218 11% 65%;
     --sidebar-primary: 210 95% 68%;
-    --sidebar-primary-foreground: 210 30% 10%;
-    --sidebar-accent: 210 25% 20%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 0 0% 5%;
+    --sidebar-primary-foreground: 217 33% 7%;
+    --sidebar-accent: 217 25% 16%;
+    --sidebar-accent-foreground: 210 17% 91%;
+    --sidebar-border: 217 19% 18%;
     --sidebar-ring: 210 95% 68%;
   }
 }
