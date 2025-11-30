@@ -18,11 +18,11 @@ interface VolatilityRiverProps {
 
 // Institutional quant-grade muted luminous palette with solid, modern opacity
 const BAND_COLORS: Record<VolatilityBandId, { base: string; light: string; dark: string; glow: string; defaultOpacity: number; selectedOpacity: number; nonSelectedOpacity: number }> = {
-  cold: { base: '#2D5A87', light: '#3D6B9A', dark: '#1E3A5F', glow: 'rgba(45,90,135,0.4)', defaultOpacity: 0.60, selectedOpacity: 0.80, nonSelectedOpacity: 0.40 },        // Deep navy → soft teal
-  mild: { base: '#475569', light: '#5A6A7F', dark: '#334155', glow: 'rgba(71,85,105,0.4)', defaultOpacity: 0.60, selectedOpacity: 0.80, nonSelectedOpacity: 0.40 },        // Slate → steel blue
-  warm: { base: '#D97706', light: '#F59E0B', dark: '#B45309', glow: 'rgba(217,119,6,0.4)', defaultOpacity: 0.60, selectedOpacity: 0.80, nonSelectedOpacity: 0.40 },       // Amber → muted gold
-  hot: { base: '#EA580C', light: '#FB923C', dark: '#C2410C', glow: 'rgba(234,88,12,0.4)', defaultOpacity: 0.60, selectedOpacity: 0.80, nonSelectedOpacity: 0.40 },        // Orange-red
-  very_hot: { base: '#991B1B', light: '#B91C1C', dark: '#7F1D1D', glow: 'rgba(153,27,27,0.4)', defaultOpacity: 0.60, selectedOpacity: 0.80, nonSelectedOpacity: 0.40 },   // Plum → crimson
+  cold: { base: '#2D5A87', light: '#3D6B9A', dark: '#1E3A5F', glow: 'rgba(45,90,135,0.4)', defaultOpacity: 0.80, selectedOpacity: 0.80, nonSelectedOpacity: 0.35 },        // Deep navy → soft teal
+  mild: { base: '#475569', light: '#5A6A7F', dark: '#334155', glow: 'rgba(71,85,105,0.4)', defaultOpacity: 0.80, selectedOpacity: 0.80, nonSelectedOpacity: 0.35 },        // Slate → steel blue
+  warm: { base: '#D97706', light: '#F59E0B', dark: '#B45309', glow: 'rgba(217,119,6,0.4)', defaultOpacity: 0.80, selectedOpacity: 0.80, nonSelectedOpacity: 0.35 },       // Amber → muted gold
+  hot: { base: '#EA580C', light: '#FB923C', dark: '#C2410C', glow: 'rgba(234,88,12,0.4)', defaultOpacity: 0.80, selectedOpacity: 0.80, nonSelectedOpacity: 0.35 },        // Orange-red
+  very_hot: { base: '#991B1B', light: '#B91C1C', dark: '#7F1D1D', glow: 'rgba(153,27,27,0.4)', defaultOpacity: 0.80, selectedOpacity: 0.80, nonSelectedOpacity: 0.35 },   // Plum → crimson
 };
 
 const BAND_ORDER: VolatilityBandId[] = ['cold', 'mild', 'warm', 'hot', 'very_hot'];
@@ -189,16 +189,26 @@ export function VolatilityRiver({
         return selectedBand === d.key ? colors.selectedOpacity : colors.nonSelectedOpacity;
       })
       .attr('stroke', d => {
+        if (selectedBand === null) return '#ffffff';
         if (selectedBand === d.key) return '#ffffff';
         return BAND_COLORS[d.key as VolatilityBandId].base;
       })
-      .attr('stroke-width', d => selectedBand === d.key ? 1.5 : 0.6)  // Thinner borders for unselected
-      .attr('stroke-opacity', d => selectedBand === d.key ? 0.9 : 0.4)  // Improved opacity for unselected
+      .attr('stroke-width', d => {
+        if (selectedBand === null) return 1.5;
+        return selectedBand === d.key ? 1.5 : 0.6;
+      })
+      .attr('stroke-opacity', d => {
+        if (selectedBand === null) return 0.9;
+        return selectedBand === d.key ? 0.9 : 0.4;
+      })
       .attr('stroke-linejoin', 'round')
       .attr('stroke-linecap', 'round')
-      .attr('filter', d => selectedBand === d.key ? 'url(#glow)' : 'none')  // Glow only on selected
+      .attr('filter', d => {
+        if (selectedBand === null) return 'url(#glow)';
+        return selectedBand === d.key ? 'url(#glow)' : 'none';
+      })
       .style('cursor', 'pointer')
-      .style('transition', 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)')
+      .style('transition', 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)')
       .on('click', (event, d) => {
         event.stopPropagation();
         onBandClick(d.key as VolatilityBandId);
@@ -206,9 +216,9 @@ export function VolatilityRiver({
       .on('mouseenter', function(event, d) {
         if (selectedBand === null) {
           d3.select(this)
-            .attr('opacity', 0.7)
-            .attr('stroke-width', 1.2)
-            .attr('stroke-opacity', 0.7)
+            .attr('opacity', 0.9)
+            .attr('stroke-width', 2)
+            .attr('stroke-opacity', 1)
             .attr('filter', 'url(#glow)');
         }
       })
@@ -217,9 +227,9 @@ export function VolatilityRiver({
           const colors = BAND_COLORS[d.key as VolatilityBandId];
           d3.select(this)
             .attr('opacity', selectedBand === null ? colors.defaultOpacity : colors.nonSelectedOpacity)
-            .attr('stroke-width', selectedBand === null ? 0.6 : 0.6)
-            .attr('stroke-opacity', selectedBand === null ? 0.4 : 0.4)
-            .attr('filter', selectedBand === d.key ? 'url(#glow)' : 'none');
+            .attr('stroke-width', selectedBand === null ? 1.5 : 0.6)
+            .attr('stroke-opacity', selectedBand === null ? 0.9 : 0.4)
+            .attr('filter', selectedBand === null || selectedBand === d.key ? 'url(#glow)' : 'none');
         }
       });
 
@@ -297,47 +307,7 @@ export function VolatilityRiver({
       .attr('font-size', '10px')
       .attr('font-weight', '400');
 
-    // Timeline line group (z-order controlled by when it's added)
-    const timelineGroup = g.append('g').attr('class', 'timeline-group');
-    
-    const currentDate = dates[currentDateIndex] || dates[0];
-    const cursorX = xScale(currentDate);
-    
-    // Main vertical timeline line - dashed with soft halo glow
-    timelineGroup.append('line')
-      .attr('class', 'current-date-cursor')
-      .attr('x1', cursorX)
-      .attr('x2', cursorX)
-      .attr('y1', 0)
-      .attr('y2', innerHeight)
-      .attr('stroke', 'rgba(255, 255, 255, 0.75)')  // White/light gray
-      .attr('stroke-width', 1.5)
-      .attr('stroke-dasharray', '5,5')  // Dashed style
-      .attr('opacity', 0.8)
-      .attr('filter', 'url(#glow)');  // Soft halo glow
-
-    // Triangle markers at top and bottom
-    const triangleSize = 6;
-    
-    // Top triangle (pointing down/inward)
-    timelineGroup.append('polygon')
-      .attr('class', 'cursor-marker-top')
-      .attr('points', `${cursorX},${triangleSize} ${cursorX - triangleSize},0 ${cursorX + triangleSize},0`)
-      .attr('fill', 'rgba(255, 255, 255, 0.8)')
-      .attr('stroke', 'rgba(255, 255, 255, 0.6)')
-      .attr('stroke-width', 0.5)
-      .attr('opacity', 0.8);
-    
-    // Bottom triangle (pointing up/inward)
-    timelineGroup.append('polygon')
-      .attr('class', 'cursor-marker-bottom')
-      .attr('points', `${cursorX},${innerHeight - triangleSize} ${cursorX - triangleSize},${innerHeight} ${cursorX + triangleSize},${innerHeight}`)
-      .attr('fill', 'rgba(255, 255, 255, 0.8)')
-      .attr('stroke', 'rgba(255, 255, 255, 0.6)')
-      .attr('stroke-width', 0.5)
-      .attr('opacity', 0.8);
-    
-    // Z-ordering: move timeline in front of or behind bands based on selection
+    // Z-ordering: ensure selected band is at the front
     if (selectedBand !== null) {
       // When a band is selected, move the selected band's path to the front
       bands.each(function(this: SVGPathElement, d) {
@@ -349,6 +319,48 @@ export function VolatilityRiver({
         }
       });
     }
+
+    // Timeline line group - RENDERED AFTER BANDS to be on top
+    const currentDate = dates[currentDateIndex] || dates[0];
+    const cursorX = xScale(currentDate);
+    
+    const timelineGroup = g.append('g')
+      .attr('class', 'timeline-group')
+      .style('pointer-events', 'none');  // Don't interfere with interactions
+    
+    // Main vertical timeline line - dashed with soft halo glow
+    timelineGroup.append('line')
+      .attr('class', 'current-date-cursor')
+      .attr('x1', cursorX)
+      .attr('x2', cursorX)
+      .attr('y1', 0)
+      .attr('y2', innerHeight)
+      .attr('stroke', 'rgba(255, 255, 255, 0.85)')
+      .attr('stroke-width', 1.5)
+      .attr('stroke-dasharray', '5,5')
+      .attr('opacity', 1)
+      .attr('filter', 'url(#glow)');
+
+    // Triangle markers at top and bottom
+    const triangleSize = 6;
+    
+    // Top triangle (pointing down/inward)
+    timelineGroup.append('polygon')
+      .attr('class', 'cursor-marker-top')
+      .attr('points', `${cursorX},${triangleSize} ${cursorX - triangleSize},0 ${cursorX + triangleSize},0`)
+      .attr('fill', 'rgba(255, 255, 255, 0.9)')
+      .attr('stroke', 'rgba(255, 255, 255, 0.7)')
+      .attr('stroke-width', 0.5)
+      .attr('opacity', 1);
+    
+    // Bottom triangle (pointing up/inward)
+    timelineGroup.append('polygon')
+      .attr('class', 'cursor-marker-bottom')
+      .attr('points', `${cursorX},${innerHeight - triangleSize} ${cursorX - triangleSize},${innerHeight} ${cursorX + triangleSize},${innerHeight}`)
+      .attr('fill', 'rgba(255, 255, 255, 0.9)')
+      .attr('stroke', 'rgba(255, 255, 255, 0.7)')
+      .attr('stroke-width', 0.5)
+      .attr('opacity', 1);
 
     // Fed Funds Rate - pre-compute valid rate points for use in zoom handler
     let validRatePoints: (RatePoint & { date: Date; dateIndex: number })[] = [];

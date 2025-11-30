@@ -75,7 +75,8 @@ export function ControlsPanel({
         <img 
           src={oscilLaLogo} 
           alt="Oscilla" 
-          className="h-14 w-auto"
+          className="h-16 w-auto opacity-100"
+          style={{ filter: 'brightness(1) contrast(1)' }}
         />
       </div>
 
