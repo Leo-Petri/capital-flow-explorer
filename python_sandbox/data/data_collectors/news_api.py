@@ -17,8 +17,8 @@ API_KEY = os.getenv("NEWS_API_KEY") or "130cde4e7b8442b1b1d6b5a850faae07"
 
 BASE_URL = "https://newsapi.org/v2/everything"
 
-START_DATE = datetime(2020, 1, 1)
-END_DATE   = datetime(2021, 12, 31)
+START_DATE = datetime(2025, 1, 1)
+END_DATE   = datetime(2025, 11, 29)
 
 # ---- UPDATED TOPICS ----
 TOPICS = {
