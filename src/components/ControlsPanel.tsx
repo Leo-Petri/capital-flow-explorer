@@ -91,38 +91,9 @@ export function ControlsPanel({
         <img 
           src={oscilLaLogo} 
           alt="Oscilla" 
-          className="h-16 w-auto opacity-100"
-          style={{ filter: 'brightness(1) contrast(1)' }}
+          className="h-16 w-auto"
+          style={{ opacity: 0.9 }}
         />
-      </div>
-
-      {/* Timeline */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Timeline</h2>
-          <div className="flex items-center gap-2 mb-3">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onPlayPause}
-              className="w-10 h-10 p-0 rounded-none bg-[#1E293B] hover:bg-[#334155] border-[#1F2937]"
-            >
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </Button>
-            <div className="flex-1">
-              <p className="text-sm font-mono text-[#E5E7EB]">
-                {formatDate(currentDate)}
-              </p>
-            </div>
-          </div>
-          <Slider
-            value={[currentDateIndex]}
-            onValueChange={([val]) => onDateIndexChange(val)}
-            max={maxDateIndex}
-            step={1}
-            className="w-full"
-          />
-        </div>
       </div>
 
       {/* View Filters */}
@@ -252,6 +223,35 @@ export function ControlsPanel({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Timeline */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Timeline</h2>
+          <div className="flex items-center gap-2 mb-3">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onPlayPause}
+              className="w-10 h-10 p-0 rounded-none bg-[#1E293B] hover:bg-[#334155] border-[#1F2937]"
+            >
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </Button>
+            <div className="flex-1">
+              <p className="text-sm font-mono text-[#E5E7EB]">
+                {formatDate(currentDate)}
+              </p>
+            </div>
+          </div>
+          <Slider
+            value={[currentDateIndex]}
+            onValueChange={([val]) => onDateIndexChange(val)}
+            max={maxDateIndex}
+            step={1}
+            className="w-full"
+          />
+        </div>
       </div>
     </div>
   );
