@@ -50,8 +50,9 @@ def find_timestamp_key(date_str: str, time_series: Dict[str, float]) -> Optional
         if ts_date.date() > target_date.date():
             break
             
-    # Return the best match found (closest past date), or the first date if we are before start of history
-    return best_match if best_match else (sorted_keys[0] if sorted_keys else None)
+    # Return the best match found (closest past date)
+    # If no past date exists (target is before all timestamps), return None
+    return best_match
 
 
 def get_cell_value(cell: Any) -> Any:
@@ -452,4 +453,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
