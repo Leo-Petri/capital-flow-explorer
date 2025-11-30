@@ -29,6 +29,10 @@ const Index = () => {
   );
   const [selectedKpi, setSelectedKpi] = useState<KpiId>("nav");
   const [showFedRate, setShowFedRate] = useState(true);
+  const [showNewsSignals, setShowNewsSignals] = useState(false);
+  const [showGoodSignals, setShowGoodSignals] = useState(true);
+  const [showNeutralSignals, setShowNeutralSignals] = useState(true);
+  const [showBadSignals, setShowBadSignals] = useState(true);
   const [selectedBand, setSelectedBand] = useState<VolatilityBandId | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
@@ -188,6 +192,14 @@ const Index = () => {
           onKpiChange={setSelectedKpi}
           showFedRate={showFedRate}
           onShowFedRateChange={setShowFedRate}
+          showNewsSignals={showNewsSignals}
+          onShowNewsSignalsChange={setShowNewsSignals}
+          showGoodSignals={showGoodSignals}
+          onShowGoodSignalsChange={setShowGoodSignals}
+          showNeutralSignals={showNeutralSignals}
+          onShowNeutralSignalsChange={setShowNeutralSignals}
+          showBadSignals={showBadSignals}
+          onShowBadSignalsChange={setShowBadSignals}
         />
       </div>
 
@@ -207,6 +219,10 @@ const Index = () => {
               selectedSignal={selectedSignal?.id || null}
               showFedRate={showFedRate}
               fedRates={FED_RATES}
+              showNewsSignals={showNewsSignals}
+              showGoodSignals={showGoodSignals}
+              showNeutralSignals={showNeutralSignals}
+              showBadSignals={showBadSignals}
             />
           </div>
         </div>

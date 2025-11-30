@@ -14,6 +14,10 @@ interface VolatilityRiverProps {
   selectedSignal: string | null;
   showFedRate: boolean;
   fedRates: RatePoint[];
+  showNewsSignals: boolean;
+  showGoodSignals: boolean;
+  showNeutralSignals: boolean;
+  showBadSignals: boolean;
 }
 
 // Institutional quant-grade muted luminous palette with solid, modern opacity
@@ -38,6 +42,10 @@ export function VolatilityRiver({
   selectedSignal,
   showFedRate,
   fedRates,
+  showNewsSignals,
+  showGoodSignals,
+  showNeutralSignals,
+  showBadSignals,
 }: VolatilityRiverProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -418,6 +426,14 @@ export function VolatilityRiver({
     }
 
     // Signal markers - pre-compute signal positions for better performance
+    // Apply filtering based on showNewsSignals and per-type toggles
+    const filteredSignals = showNewsSignals ? signals.filter(signal => {
+      if (signal.color === 'green') return showGoodSignals;
+      if (signal.color === 'gray') return showNeutralSignals;
+      if (signal.color === 'red') return showBadSignals;
+      return false;
+    }) : [];
+
     const signalGroup = g.append('g')
       .attr('class', 'signal-markers')
       .attr('transform', `translate(0,${innerHeight + 10})`);
@@ -433,7 +449,7 @@ export function VolatilityRiver({
     };
 
     // Pre-compute signal positions using Map lookups instead of find()
-    const signalPositions = signals.map(signal => {
+    const signalPositions = filteredSignals.map(signal => {
       // Try exact date match first (O(1))
       const exactIndex = dateToIndexMap.get(signal.date);
       if (exactIndex !== undefined) {
@@ -472,7 +488,7 @@ export function VolatilityRiver({
         
         const group = d3.select(this);
         const isSelected = selectedSignal === d.signal.id;
-        const color = SIGNAL_COLORS[d.signal.type];
+        const color = SIGNAL_COLORS[d.signal.color] || SIGNAL_COLORS[d.signal.type];
         
         // Small bubble/dot only - no vertical line
         group.append('circle')
