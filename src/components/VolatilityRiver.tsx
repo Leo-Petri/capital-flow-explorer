@@ -490,40 +490,58 @@ export function VolatilityRiver({
     const cursorX = xScale(currentDate);
     const triangleSize = 6;
     
+    console.log('🎯 TIMELINE LINE DEBUG:', {
+      currentDateIndex,
+      currentDate,
+      cursorX,
+      innerHeight,
+      xScaleRange: xScale.range(),
+      xScaleDomain: xScale.domain(),
+      isInBounds: cursorX >= 0 && cursorX <= innerWidth
+    });
+    
     const timelineGroup = g.append('g')
       .attr('class', 'timeline-group')
-      .style('pointer-events', 'none');  // Don't interfere with interactions
+      .style('pointer-events', 'none')
+      .style('z-index', '9999');  // Force to front
     
-    // Main vertical timeline line - dashed with strong halo glow
-    timelineGroup.append('line')
+    // Main vertical timeline line - MAKE IT SUPER VISIBLE FOR DEBUGGING
+    const timelineLine = timelineGroup.append('line')
       .attr('class', 'current-date-cursor')
       .attr('x1', cursorX)
       .attr('x2', cursorX)
-      .attr('y1', 0)
-      .attr('y2', innerHeight)
-      .attr('stroke', 'rgba(255, 255, 255, 0.9)')
-      .attr('stroke-width', 1.5)
-      .attr('stroke-dasharray', '5,5')
+      .attr('y1', -10)  // Start slightly above
+      .attr('y2', innerHeight + 10)  // End slightly below
+      .attr('stroke', '#FFFFFF')  // Pure white
+      .attr('stroke-width', 3)  // Thicker
+      .attr('stroke-dasharray', '8,4')  // More visible dashes
       .attr('opacity', 1)
-      .attr('filter', 'url(#timeline-glow)');
+      .attr('filter', 'url(#timeline-glow)')
+      .style('mix-blend-mode', 'normal');  // Ensure no blending issues
+    
+    console.log('✅ Timeline line created:', timelineLine.node());
 
     // Top triangle (pointing down/inward)
-    timelineGroup.append('polygon')
+    const topTriangle = timelineGroup.append('polygon')
       .attr('class', 'cursor-marker-top')
       .attr('points', `${cursorX},${triangleSize} ${cursorX - triangleSize},0 ${cursorX + triangleSize},0`)
-      .attr('fill', 'rgba(255, 255, 255, 0.95)')
-      .attr('stroke', 'rgba(255, 255, 255, 0.8)')
-      .attr('stroke-width', 0.5)
+      .attr('fill', '#FFFFFF')
+      .attr('stroke', '#FFFFFF')
+      .attr('stroke-width', 1)
       .attr('opacity', 1);
     
+    console.log('✅ Top triangle created:', topTriangle.node());
+    
     // Bottom triangle (pointing up/inward)
-    timelineGroup.append('polygon')
+    const bottomTriangle = timelineGroup.append('polygon')
       .attr('class', 'cursor-marker-bottom')
       .attr('points', `${cursorX},${innerHeight - triangleSize} ${cursorX - triangleSize},${innerHeight} ${cursorX + triangleSize},${innerHeight}`)
-      .attr('fill', 'rgba(255, 255, 255, 0.95)')
-      .attr('stroke', 'rgba(255, 255, 255, 0.8)')
-      .attr('stroke-width', 0.5)
+      .attr('fill', '#FFFFFF')
+      .attr('stroke', '#FFFFFF')
+      .attr('stroke-width', 1)
       .attr('opacity', 1);
+    
+    console.log('✅ Bottom triangle created:', bottomTriangle.node());
 
     // Zoom behavior with constraints
     const zoom = d3.zoom<SVGSVGElement, unknown>()
